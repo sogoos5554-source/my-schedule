@@ -285,7 +285,6 @@
       <div class="form-grid">
         <input type="text" id="mTour" class="form-control form-full" placeholder="公演名・ツアー名（任意）">
         <select id="mGroup" class="form-control">
-          <option>ハロプロ</option>
           <option>OCHA NORMA</option>
           <option>モーニング娘。</option>
           <option>アンジュルム</option>
@@ -306,17 +305,6 @@
   <div id="eventList"></div>
 
   <script>
-    const GROUPS_ORDER = [
-      "ハロプロ",
-      "モーニング娘。",
-      "アンジュルム",
-      "Juice=Juice",
-      "つばきファクトリー",
-      "BEYOOOOONDS",
-      "OCHA NORMA",
-      "ロージークロニクル"
-    ];
-
     let events = JSON.parse(localStorage.getItem('hp_events') || '[]');
     let currentTab = 'group';
     let currentFilter = 'upcoming';
@@ -421,8 +409,7 @@
       lines.forEach(line => {
         if (line.includes("公演日") && line.includes("会場")) return;
 
-        if (line.includes("ハロプロ")) currentGroup = "ハロプロ";
-        else if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
+        if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
         else if (line.includes("モーニング娘。")) currentGroup = "モーニング娘。";
         else if (line.includes("アンジュルム")) currentGroup = "アンジュルム";
         else if (line.includes("Juice=Juice")) currentGroup = "Juice=Juice";
@@ -458,7 +445,7 @@
           if (match && match[1]) {
             venue = match[1].trim();
           } else {
-            const cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/(\d{1,2})|\([日月火水木金土]\))/g, '')
+            const cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
                                   .replace(/\d{1,2}:\d{2}/g, '')
                                   .replace(/(都道府県|大阪府|東京都|愛知県|埼玉県|千葉県|北海道|福岡県|宮城県)/g, '')
                                   .trim();
@@ -569,14 +556,7 @@
     }
 
     function renderGroupedList(listEl, displayEvents) {
-      const existingGroups = [...new Set(displayEvents.map(e => e.group))];
-      
-      // GROUPS_ORDER の順番に並べつつ、リストに存在して定義されていないグループがあれば後ろに追加する
-      let groups = GROUPS_ORDER.filter(g => existingGroups.includes(g));
-      existingGroups.forEach(g => {
-        if (!groups.includes(g)) groups.push(g);
-      });
-
+      const groups = [...new Set(displayEvents.map(e => e.group))];
       groups.forEach(g => {
         const header = document.createElement('div');
         header.className = 'group-header';
@@ -670,10 +650,6 @@
         statusLabel = '終了';
       }
 
-      let optionsHtml = GROUPS_ORDER.map(g => 
-        `<option ${ev.group === g ? 'selected' : ''}>${g}</option>`
-      ).join('');
-
       card.innerHTML = `
         <div class="date-box">
           <div class="date-month">${mStr}</div>
@@ -684,7 +660,13 @@
           <div class="venue-name">${ev.venue}</div>
           <div class="time-info">開場:${ev.openTime} / 開演:${ev.startTime}</div>
           <select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
-            ${optionsHtml}
+            <option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
+            <option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
+            <option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
+            <option ${ev.group==='Juice=Juice'?'selected':''}>Juice=Juice</option>
+            <option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
+            <option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
+            <option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
           </select>
         </div>
         <button class="status-badge ${statusClass}" onclick="toggleStatus(${ev.id})">${statusLabel}</button>
