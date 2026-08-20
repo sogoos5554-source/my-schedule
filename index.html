@@ -556,7 +556,18 @@
     }
 
     function renderGroupedList(listEl, displayEvents) {
+      // 各グループの「一番早い公演の日付」を求めて、それが早い順にグループを並び替える
+      const groupMinDate = {};
+      displayEvents.forEach(e => {
+        const val = getDateSortValue(e);
+        if (groupMinDate[e.group] === undefined || val < groupMinDate[e.group]) {
+          groupMinDate[e.group] = val;
+        }
+      });
+
       const groups = [...new Set(displayEvents.map(e => e.group))];
+      groups.sort((a, b) => (groupMinDate[a] || 0) - (groupMinDate[b] || 0));
+
       groups.forEach(g => {
         const header = document.createElement('div');
         header.className = 'group-header';
