@@ -416,7 +416,6 @@
         else if (line.includes("つばきファクトリー")) currentGroup = "つばきファクトリー";
         else if (line.includes("BEYOOOOONDS")) currentGroup = "BEYOOOOONDS";
         else if (line.includes("ロージークロニクル")) currentGroup = "ロージークロニクル";
-         else if (line.includes("ハロプロ")) currentGroup = "ハロプロ";
 
         if ((line.includes("公演名") || line.includes("出演") || line.includes("TOUR") || line.includes("ツアー") || line.includes("『")) && !line.match(/\d{1,2}月\d{1,2}日/)) {
           currentTour = line.replace(/^公演名[\s\t]*/, '').trim();
@@ -669,7 +668,6 @@
             <option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
             <option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
             <option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
-            <option ${ev.group==='ハロプロ'?'selected':''}>ハロプロ</option>
           </select>
         </div>
         <button class="status-badge ${statusClass}" onclick="toggleStatus(${ev.id})">${statusLabel}</button>
