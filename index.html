@@ -28,7 +28,6 @@
       padding-bottom: 60px;
     }
 
-    /* 最上部タブナビゲーション */
     .top-nav {
       display: flex;
       gap: 8px;
@@ -52,7 +51,6 @@
       box-shadow: 0 3px 8px rgba(224, 64, 251, 0.3);
     }
 
-    /* 入力カード */
     .input-card {
       background: var(--card-bg);
       border-radius: 16px;
@@ -110,7 +108,6 @@
       cursor: pointer;
     }
 
-    /* 絞り込みフィルター */
     .filter-group {
       display: flex;
       gap: 6px;
@@ -136,7 +133,6 @@
       border-color: #ff5277;
     }
 
-    /* グループ見出し */
     .group-banner {
       background: linear-gradient(90deg, #ff758c, #ff7eb3);
       color: white;
@@ -151,7 +147,6 @@
       gap: 6px;
     }
 
-    /* カードデザイン */
     .card {
       background: #ffffff;
       border-radius: 14px;
@@ -181,16 +176,23 @@
     }
     .info-box {
       flex: 1;
+      overflow: hidden;
     }
     .venue {
       font-size: 0.8rem;
       font-weight: bold;
       color: #2c3e50;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .time {
       font-size: 0.7rem;
       color: #888;
       margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .group-tag {
       display: inline-block;
@@ -210,18 +212,18 @@
       padding: 4px 10px;
       font-size: 0.75rem;
       font-weight: bold;
+      white-space: nowrap;
     }
 
     .btn-delete {
       color: #ff8a80;
       background: none;
       border: none;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       cursor: pointer;
-      padding: 0 4px;
+      padding: 4px 8px;
     }
 
-    /* 手動追加フォーム */
     .manual-form {
       display: none;
       margin-top: 10px;
@@ -298,25 +300,35 @@
     let currentSort = 'group';
     let currentFilter = 'future';
 
-    // 初期化・リアルタイム受け取り
+    // 読み込み処理
     docRef.onSnapshot((doc) => {
       if (doc.exists && doc.data().list) {
-        // クラウド側にデータがある場合のみ適用（手元のデータが消えないよう保護）
-        if (doc.data().list.length > 0 || events.length === 0) {
-          events = doc.data().list;
-          render();
-        }
+        let rawList = doc.data().list;
+        let cleanedList = [];
+
+        // 崩れたJSONデータの救済・自動復元ロジック
+        rawList.forEach(item => {
+          if (typeof item.title === 'string' && item.title.trim().startsWith('[')) {
+            try {
+              let parsed = JSON.parse(item.title);
+              if (Array.isArray(parsed)) {
+                cleanedList.push(...parsed);
+                return;
+              }
+            } catch(e) {}
+          }
+          cleanedList.push(item);
+        });
+
+        events = cleanedList;
+        render();
       }
     });
 
-    // クラウド（Firebase）への保存処理
+    // クラウド保存処理
     function saveToCloud() {
-      if (!events || events.length === 0) {
-        alert("保存する予定データがありません");
-        return;
-      }
       docRef.set({ list: events }, { merge: true }).then(() => {
-        alert("クラウド（Firebase）へ正常に保存・バックアップされました！");
+        alert("クラウドに正常保存・バックアップされました！");
       }).catch((err) => {
         alert("保存エラー: " + err.message);
       });
@@ -339,7 +351,7 @@
 
       if (currentSort === 'group') {
         let grouped = {};
-        displayList.forEach(ev => {
+        displayList.forEach((ev) => {
           const g = ev.group || "全般";
           if (!grouped[g]) grouped[g] = [];
           grouped[g].push(ev);
@@ -351,8 +363,8 @@
           gBanner.innerHTML = `🎤 ${g}`;
           container.appendChild(gBanner);
 
-          grouped[g].forEach((ev, idx) => {
-            container.appendChild(createCard(ev, idx));
+          grouped[g].forEach((ev) => {
+            container.appendChild(createCard(ev));
           });
         }
       } else {
@@ -362,13 +374,13 @@
           displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
         }
 
-        displayList.forEach((ev, idx) => {
-          container.appendChild(createCard(ev, idx));
+        displayList.forEach((ev) => {
+          container.appendChild(createCard(ev));
         });
       }
     }
 
-    function createCard(ev, idx) {
+    function createCard(ev) {
       const card = document.createElement("div");
       card.className = "card";
 
@@ -376,27 +388,56 @@
       const m = parts[0] ? parts[0] + "月" : "";
       const d = parts[1] || ev.date || "";
 
+      // IDや一意なプロパティで正しく削除できるように修正
+      const targetId = ev.id || ev.title;
+
       card.innerHTML = `
         <div class="date-box">
           <span class="month">${m}</span>
           <span class="day">${d}</span>
         </div>
         <div class="info-box">
-          <div class="venue">${ev.place || '会場未定'}</div>
-          <div class="time">${ev.title || '特別公演'}</div>
+          <div class="venue">${ev.venue || ev.place || '会場未定'}</div>
+          <div class="time">${ev.tour || ev.title || '公演'}</div>
           <span class="group-tag">${ev.group || 'モーニング娘。'}</span>
         </div>
-        <div class="status-pill">${ev.status || '当選'}</div>
-        <button class="btn-delete" onclick="deleteEvent(${idx})">✕</button>
+        <div class="status-pill">${ev.status || '未応募'}</div>
+        <button class="btn-delete" onclick="deleteEventByItem('${targetId}')">✕</button>
       `;
       return card;
     }
 
+    function deleteEventByItem(targetId) {
+      if (confirm("削除しますか？")) {
+        events = events.filter(item => (item.id || item.title) !== targetId);
+        render();
+        saveToCloud();
+      }
+    }
+
     function processInput() {
-      const t = document.getElementById("inputText").value;
+      const t = document.getElementById("inputText").value.trim();
       if (!t) return;
-      events.push({ group: "モーニング娘。", date: "8/21", title: t, place: "神奈川県 KT Zepp yokohama", status: "当選" });
+
+      // JSON文字列が貼り付けられた場合の解析処理
+      if (t.startsWith('[') || t.startsWith('{')) {
+        try {
+          let parsed = JSON.parse(t);
+          if (Array.isArray(parsed)) {
+            events.push(...parsed);
+          } else {
+            events.push(parsed);
+          }
+          document.getElementById("inputText").value = "";
+          render();
+          saveToCloud();
+          return;
+        } catch(e) {}
+      }
+
+      events.push({ id: Date.now().toString(), group: "モーニング娘。", date: "8/21", title: t, venue: "神奈川県 KT Zepp yokohama", status: "当選" });
       document.getElementById("inputText").value = "";
+      render();
       saveToCloud();
     }
 
@@ -410,21 +451,16 @@
       const d = document.getElementById("mDate").value;
       const t = document.getElementById("mTitle").value;
       const p = document.getElementById("mPlace").value;
-      events.push({ group: g || "モーニング娘。", date: d || "9/5", title: t, place: p, status: "当選" });
+      events.push({ id: Date.now().toString(), group: g || "モーニング娘。", date: d || "9/5", title: t, venue: p, status: "当選" });
       toggleManualForm();
+      render();
       saveToCloud();
     }
 
-    function deleteEvent(idx) {
-      if (confirm("削除しますか？")) {
-        events.splice(idx, 1);
-        saveToCloud();
-      }
-    }
-
     function resetData() {
-      if (confirm("初期化しますか？")) {
+      if (confirm("全てのデータを初期化しますか？")) {
         events = [];
+        render();
         saveToCloud();
       }
     }
