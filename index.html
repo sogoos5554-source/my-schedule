@@ -258,7 +258,7 @@
 
     <div class="sub-btn-group">
       <button class="btn-sub-pill" onclick="toggleManualForm()">＋ 手動追加</button>
-      <button class="btn-sub-pill" onclick="saveToCloud()">💾 バックアップ出力</button>
+      <button class="btn-sub-pill" onclick="saveToCloud()">💾 バックアップ保存</button>
       <button class="btn-sub-pill" onclick="resetData()">初期化</button>
     </div>
 
@@ -298,17 +298,27 @@
     let currentSort = 'group';
     let currentFilter = 'future';
 
-    // リアルタイム読み込み
+    // 初期化・リアルタイム受け取り
     docRef.onSnapshot((doc) => {
       if (doc.exists && doc.data().list) {
-        events = doc.data().list;
-        render();
+        // クラウド側にデータがある場合のみ適用（手元のデータが消えないよう保護）
+        if (doc.data().list.length > 0 || events.length === 0) {
+          events = doc.data().list;
+          render();
+        }
       }
     });
 
+    // クラウド（Firebase）への保存処理
     function saveToCloud() {
+      if (!events || events.length === 0) {
+        alert("保存する予定データがありません");
+        return;
+      }
       docRef.set({ list: events }, { merge: true }).then(() => {
-        alert("クラウドへ同期保存しました！");
+        alert("クラウド（Firebase）へ正常に保存・バックアップされました！");
+      }).catch((err) => {
+        alert("保存エラー: " + err.message);
       });
     }
 
@@ -323,12 +333,10 @@
 
       let displayList = [...events];
 
-      // フィルター適用
       if (currentFilter === 'end') {
         displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了');
       }
 
-      // 「グループ別」表示
       if (currentSort === 'group') {
         let grouped = {};
         displayList.forEach(ev => {
@@ -348,7 +356,6 @@
           });
         }
       } else {
-        // 「日程順」「参戦予定」表示
         if (currentSort === 'date') {
           displayList.sort((a,b) => (a.date || '').localeCompare(b.date || ''));
         } else if (currentSort === 'schedule') {
