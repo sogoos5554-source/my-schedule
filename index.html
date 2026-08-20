@@ -147,6 +147,21 @@
       gap: 6px;
     }
 
+    .tour-banner {
+      color: #880e4f;
+      background: #fce4ec;
+      padding: 6px 10px;
+      border-left: 4px solid #e040fb;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .card {
       background: #ffffff;
       border-radius: 14px;
@@ -162,26 +177,28 @@
       border-radius: 10px;
       padding: 4px 6px;
       text-align: center;
-      min-width: 48px;
+      min-width: 50px;
       box-sizing: border-box;
+      background: #fff;
     }
     .month {
       font-size: 0.65rem;
       font-weight: bold;
       display: block;
-      color: #e040fb;
+      color: #333;
     }
     .day {
-      font-size: 1.0rem;
+      font-size: 1.1rem;
       font-weight: 800;
-      line-height: 1.1;
+      line-height: 1;
+      color: #000;
     }
     .info-box {
       flex: 1;
       overflow: hidden;
     }
     .venue {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: bold;
       color: #2c3e50;
       white-space: nowrap;
@@ -191,19 +208,19 @@
     .time {
       font-size: 0.7rem;
       color: #888;
-      margin-top: 1px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin-top: 2px;
     }
-    .group-tag {
-      display: inline-block;
-      border: 1px solid #ff80ab;
+    
+    .group-select {
+      border: 1px solid #ff4081;
       color: #d81b60;
       border-radius: 8px;
-      padding: 1px 6px;
-      font-size: 0.65rem;
-      margin-top: 3px;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      margin-top: 4px;
+      background: #fff;
+      font-weight: bold;
+      outline: none;
     }
 
     .status-pill {
@@ -284,7 +301,6 @@
   <div id="eventList"></div>
 
   <script>
-    // Firebase設定
     const firebaseConfig = {
       apiKey: "AIzaSyD-placeholder",
       authDomain: "my-schedule-bf9ca.firebaseapp.com",
@@ -333,6 +349,31 @@
       });
     }
 
+    // あらゆる形式から「月」と「日」を判別抽出する関数
+    function parseDateObj(ev) {
+      let raw = ev.date || ev.day || ev.date_str || ev.event_date || "";
+      
+      // dateが見つからない場合、titleなどから日付表記(例: 8/21 または 10月18日)を探す
+      if (!raw && ev.title) {
+        let match = ev.title.match(/(\d{1,2})[\/\-月](\d{1,2})/);
+        if (match) raw = match[1] + "/" + match[2];
+      }
+
+      if (!raw) return { month: "未定", day: "--" };
+
+      let str = String(raw).trim();
+      let parts = str.match(/\d+/g);
+
+      if (parts && parts.length >= 2) {
+        // 例: 2026/8/21 や 8/21
+        let m = parts.length >= 3 ? parts[1] : parts[0];
+        let d = parts.length >= 3 ? parts[2] : parts[1];
+        return { month: parseInt(m, 10) + "月", day: parseInt(d, 10) };
+      }
+
+      return { month: "日付", day: str };
+    }
+
     function render() {
       const container = document.getElementById("eventList");
       container.innerHTML = "";
@@ -345,13 +386,13 @@
       let displayList = [...events];
 
       if (currentFilter === 'end') {
-        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了');
+        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了' || ev.status === '抽選終了');
       }
 
       if (currentSort === 'group') {
         let grouped = {};
         displayList.forEach((ev) => {
-          const g = ev.group || "全般";
+          const g = ev.group || "モーニング娘。";
           if (!grouped[g]) grouped[g] = [];
           grouped[g].push(ev);
         });
@@ -362,13 +403,32 @@
           gBanner.innerHTML = `🎤 ${g}`;
           container.appendChild(gBanner);
 
-          grouped[g].forEach((ev) => {
-            container.appendChild(createCard(ev));
+          // ツアー・公演ごとにグループ化してツアータイトルを表示
+          let tourGrouped = {};
+          grouped[g].forEach(ev => {
+            let tourName = ev.tour || ev.title || "特別公演";
+            if (!tourGrouped[tourName]) tourGrouped[tourName] = [];
+            tourGrouped[tourName].push(ev);
           });
+
+          for (let tourName in tourGrouped) {
+            const tBanner = document.createElement("div");
+            tBanner.className = "tour-banner";
+            tBanner.innerHTML = `📢 ${tourName}`;
+            container.appendChild(tBanner);
+
+            tourGrouped[tourName].forEach(ev => {
+              container.appendChild(createCard(ev));
+            });
+          }
         }
       } else {
         if (currentSort === 'date') {
-          displayList.sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+          displayList.sort((a,b) => {
+            let dA = parseDateObj(a);
+            let dB = parseDateObj(b);
+            return (dA.month + dA.day).localeCompare(dB.month + dB.day);
+          });
         } else if (currentSort === 'schedule') {
           displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
         }
@@ -379,33 +439,18 @@
       }
     }
 
-    // 日付解析関数
-    function parseDate(rawDate) {
-      if (!rawDate) return { month: "未定", day: "未定" };
-      
-      const str = String(rawDate).trim();
-      const parts = str.split(/[\/\-\.]/);
-      
-      if (parts.length >= 3) {
-        // YYYY/MM/DD の場合
-        return { month: parseInt(parts[1], 10) + "月", day: parseInt(parts[2], 10) + "日" };
-      } else if (parts.length === 2) {
-        // MM/DD の場合
-        return { month: parseInt(parts[0], 10) + "月", day: parseInt(parts[1], 10) + "日" };
-      }
-      
-      return { month: "日付", day: str };
-    }
-
     function createCard(ev) {
       const card = document.createElement("div");
       card.className = "card";
 
-      // 日付の取得（date, day, event_date など様々なキーに対応）
-      const rawDate = ev.date || ev.day || ev.event_date || "";
-      const dateObj = parseDate(rawDate);
+      const dateObj = parseDateObj(ev);
+      const targetId = ev.id || ev.title || Math.random().toString();
 
-      const targetId = ev.id || ev.title;
+      const venueName = ev.venue || ev.place || '会場未定';
+      const openTime = ev.open_time || ev.open || '15:00';
+      const startTime = ev.start_time || ev.start || '15:45';
+      const groupName = ev.group || 'モーニング娘。';
+      const statusText = ev.status || '当選';
 
       card.innerHTML = `
         <div class="date-box">
@@ -413,11 +458,13 @@
           <span class="day">${dateObj.day}</span>
         </div>
         <div class="info-box">
-          <div class="venue">${ev.venue || ev.place || '会場未定'}</div>
-          <div class="time">${ev.tour || ev.title || '公演'}</div>
-          <span class="group-tag">${ev.group || 'モーニング娘。'}</span>
+          <div class="venue">${venueName}</div>
+          <div class="time">開場:${openTime} / 開演:${startTime}</div>
+          <select class="group-select">
+            <option selected>${groupName}</option>
+          </select>
         </div>
-        <div class="status-pill">${ev.status || '未応募'}</div>
+        <div class="status-pill">${statusText}</div>
         <button class="btn-delete" onclick="deleteEventByItem('${targetId}')">✕</button>
       `;
       return card;
