@@ -12,15 +12,13 @@
   <style>
     :root {
       --primary: #ff5252;
-      --primary-light: #ff7979;
       --bg: #fff0f3;
       --card-bg: #ffffff;
       --text: #2c3e50;
-      --accent: #e040fb;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -63,9 +61,6 @@
       font-weight: bold;
       color: #6a1b9a;
       margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
     .input-flex {
       display: flex;
@@ -82,14 +77,13 @@
       outline: none;
     }
     .btn-send {
-      background: linear-gradient(135deg, #e040fb, #e040fb);
+      background: #e040fb;
       color: white;
       border: none;
       border-radius: 12px;
       width: 60px;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 3px 8px rgba(224, 64, 251, 0.3);
     }
 
     .sub-btn-group {
@@ -343,35 +337,44 @@
 
     function saveToCloud() {
       docRef.set({ list: events }, { merge: true }).then(() => {
-        alert("クラウドに正常保存・バックアップされました！");
+        alert("クラウドに保存しました！");
       }).catch((err) => {
         alert("保存エラー: " + err.message);
       });
     }
 
-    // あらゆる形式から「月」と「日」を判別抽出する関数
+    // 日付判定ロジック強化版
     function parseDateObj(ev) {
-      let raw = ev.date || ev.day || ev.date_str || ev.event_date || "";
+      // 1. すでに month と day が別々のプロパティで入っている場合
+      if (ev.month && (ev.day || ev.date_day)) {
+        let m = String(ev.month).replace(/[^\d]/g, '');
+        let d = String(ev.day || ev.date_day).replace(/[^\d]/g, '');
+        if (m && d) return { month: m + "月", day: d };
+      }
+
+      // 2. date, day, date_str など単一の文字列プロパティを検証
+      let val = ev.date || ev.day || ev.date_str || ev.event_date || ev.datetime || "";
       
-      // dateが見つからない場合、titleなどから日付表記(例: 8/21 または 10月18日)を探す
-      if (!raw && ev.title) {
-        let match = ev.title.match(/(\d{1,2})[\/\-月](\d{1,2})/);
-        if (match) raw = match[1] + "/" + match[2];
+      // 3. プロパティにない場合は title や whole text から抽出を試みる
+      if (!val && ev.title) val = ev.title;
+
+      if (val) {
+        let str = String(val).trim();
+        let matches = str.match(/(\d{1,2})[\/\-月](\d{1,2})/);
+        if (matches) {
+          return { month: parseInt(matches[1], 10) + "月", day: parseInt(matches[2], 10) };
+        }
+        
+        // 数値だけが抽出できるかチェック (例: "18")
+        let nums = str.match(/\d+/g);
+        if (nums && nums.length === 1) {
+          return { month: "月", day: nums[0] };
+        } else if (nums && nums.length >= 2) {
+          return { month: parseInt(nums[nums.length-2], 10) + "月", day: parseInt(nums[nums.length-1], 10) };
+        }
       }
 
-      if (!raw) return { month: "未定", day: "--" };
-
-      let str = String(raw).trim();
-      let parts = str.match(/\d+/g);
-
-      if (parts && parts.length >= 2) {
-        // 例: 2026/8/21 や 8/21
-        let m = parts.length >= 3 ? parts[1] : parts[0];
-        let d = parts.length >= 3 ? parts[2] : parts[1];
-        return { month: parseInt(m, 10) + "月", day: parseInt(d, 10) };
-      }
-
-      return { month: "日付", day: str };
+      return { month: "未定", day: "--" };
     }
 
     function render() {
@@ -403,10 +406,9 @@
           gBanner.innerHTML = `🎤 ${g}`;
           container.appendChild(gBanner);
 
-          // ツアー・公演ごとにグループ化してツアータイトルを表示
           let tourGrouped = {};
           grouped[g].forEach(ev => {
-            let tourName = ev.tour || ev.title || "特別公演";
+            let tourName = ev.tour || ev.tour_title || ev.title || "特別公演";
             if (!tourGrouped[tourName]) tourGrouped[tourName] = [];
             tourGrouped[tourName].push(ev);
           });
@@ -446,11 +448,11 @@
       const dateObj = parseDateObj(ev);
       const targetId = ev.id || ev.title || Math.random().toString();
 
-      const venueName = ev.venue || ev.place || '会場未定';
+      const venueName = ev.venue || ev.place || ev.location || '会場未定';
       const openTime = ev.open_time || ev.open || '15:00';
       const startTime = ev.start_time || ev.start || '15:45';
       const groupName = ev.group || 'モーニング娘。';
-      const statusText = ev.status || '当選';
+      const statusText = ev.status || '未応募';
 
       card.innerHTML = `
         <div class="date-box">
