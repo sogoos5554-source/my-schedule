@@ -160,19 +160,21 @@
     .date-box {
       border: 1.5px solid #2c3e50;
       border-radius: 10px;
-      padding: 4px 8px;
+      padding: 4px 6px;
       text-align: center;
-      min-width: 44px;
+      min-width: 48px;
+      box-sizing: border-box;
     }
     .month {
       font-size: 0.65rem;
       font-weight: bold;
       display: block;
+      color: #e040fb;
     }
     .day {
-      font-size: 1.1rem;
+      font-size: 1.0rem;
       font-weight: 800;
-      line-height: 1;
+      line-height: 1.1;
     }
     .info-box {
       flex: 1;
@@ -300,13 +302,11 @@
     let currentSort = 'group';
     let currentFilter = 'future';
 
-    // 読み込み処理
     docRef.onSnapshot((doc) => {
       if (doc.exists && doc.data().list) {
         let rawList = doc.data().list;
         let cleanedList = [];
 
-        // 崩れたJSONデータの救済・自動復元ロジック
         rawList.forEach(item => {
           if (typeof item.title === 'string' && item.title.trim().startsWith('[')) {
             try {
@@ -325,7 +325,6 @@
       }
     });
 
-    // クラウド保存処理
     function saveToCloud() {
       docRef.set({ list: events }, { merge: true }).then(() => {
         alert("クラウドに正常保存・バックアップされました！");
@@ -380,21 +379,38 @@
       }
     }
 
+    // 日付解析関数
+    function parseDate(rawDate) {
+      if (!rawDate) return { month: "未定", day: "未定" };
+      
+      const str = String(rawDate).trim();
+      const parts = str.split(/[\/\-\.]/);
+      
+      if (parts.length >= 3) {
+        // YYYY/MM/DD の場合
+        return { month: parseInt(parts[1], 10) + "月", day: parseInt(parts[2], 10) + "日" };
+      } else if (parts.length === 2) {
+        // MM/DD の場合
+        return { month: parseInt(parts[0], 10) + "月", day: parseInt(parts[1], 10) + "日" };
+      }
+      
+      return { month: "日付", day: str };
+    }
+
     function createCard(ev) {
       const card = document.createElement("div");
       card.className = "card";
 
-      const parts = (ev.date || "").split("/");
-      const m = parts[0] ? parts[0] + "月" : "";
-      const d = parts[1] || ev.date || "";
+      // 日付の取得（date, day, event_date など様々なキーに対応）
+      const rawDate = ev.date || ev.day || ev.event_date || "";
+      const dateObj = parseDate(rawDate);
 
-      // IDや一意なプロパティで正しく削除できるように修正
       const targetId = ev.id || ev.title;
 
       card.innerHTML = `
         <div class="date-box">
-          <span class="month">${m}</span>
-          <span class="day">${d}</span>
+          <span class="month">${dateObj.month}</span>
+          <span class="day">${dateObj.day}</span>
         </div>
         <div class="info-box">
           <div class="venue">${ev.venue || ev.place || '会場未定'}</div>
@@ -419,7 +435,6 @@
       const t = document.getElementById("inputText").value.trim();
       if (!t) return;
 
-      // JSON文字列が貼り付けられた場合の解析処理
       if (t.startsWith('[') || t.startsWith('{')) {
         try {
           let parsed = JSON.parse(t);
@@ -451,7 +466,7 @@
       const d = document.getElementById("mDate").value;
       const t = document.getElementById("mTitle").value;
       const p = document.getElementById("mPlace").value;
-      events.push({ id: Date.now().toString(), group: g || "モーニング娘。", date: d || "9/5", title: t, venue: p, status: "当選" });
+      events.push({ id: Date.now().toString(), group: g || "モーニング娘。", date: d || "8/21", title: t, venue: p, status: "当選" });
       toggleManualForm();
       render();
       saveToCloud();
