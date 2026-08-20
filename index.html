@@ -151,15 +151,6 @@
       gap: 6px;
     }
 
-    .tour-sub-banner {
-      color: #c2185b;
-      font-size: 0.8rem;
-      font-weight: bold;
-      padding: 2px 0 2px 8px;
-      margin: 8px 0 6px 0;
-      border-left: 3px solid #ff4081;
-    }
-
     /* カードデザイン */
     .card {
       background: #ffffff;
@@ -252,9 +243,9 @@
 
   <!-- トップタブ -->
   <div class="top-nav">
-    <button class="top-nav-btn" onclick="setSort('date')">📅 日程順</button>
-    <button class="top-nav-btn active" onclick="setSort('group')">🎤 グループ別</button>
-    <button class="top-nav-btn" onclick="setSort('schedule')">✏️ 参戦予定</button>
+    <button class="top-nav-btn" onclick="setSort('date', this)">📅 日程順</button>
+    <button class="top-nav-btn active" onclick="setSort('group', this)">🎤 グループ別</button>
+    <button class="top-nav-btn" onclick="setSort('schedule', this)">✏️ 参戦予定</button>
   </div>
 
   <!-- 入力エリア -->
@@ -280,9 +271,9 @@
     </div>
 
     <div class="filter-group">
-      <button class="btn-filter-pill" onclick="setFilter('all')">🌐 全部の公演</button>
-      <button class="btn-filter-pill active" onclick="setFilter('future')">✨ 今後の公演</button>
-      <button class="btn-filter-pill" onclick="setFilter('end')">📦 終了・落選</button>
+      <button class="btn-filter-pill" onclick="setFilter('all', this)">🌐 全部の公演</button>
+      <button class="btn-filter-pill active" onclick="setFilter('future', this)">✨ 今後の公演</button>
+      <button class="btn-filter-pill" onclick="setFilter('end', this)">📦 終了・落選</button>
     </div>
   </div>
 
@@ -325,49 +316,73 @@
       const container = document.getElementById("eventList");
       container.innerHTML = "";
 
-      if (events.length === 0) {
+      if (!events || events.length === 0) {
         container.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>予定がありません</div>";
         return;
       }
 
-      // グループ別表示
-      let grouped = {};
-      events.forEach(ev => {
-        const g = ev.group || "全般";
-        if (!grouped[g]) grouped[g] = [];
-        grouped[g].push(ev);
-      });
+      let displayList = [...events];
 
-      for (let g in grouped) {
-        const gBanner = document.createElement("div");
-        gBanner.className = "group-banner";
-        gBanner.innerHTML = `🎤 ${g}`;
-        container.appendChild(gBanner);
+      // フィルター適用
+      if (currentFilter === 'end') {
+        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了');
+      }
 
-        grouped[g].forEach((ev, idx) => {
-          const card = document.createElement("div");
-          card.className = "card";
+      // 「グループ別」表示
+      if (currentSort === 'group') {
+        let grouped = {};
+        displayList.forEach(ev => {
+          const g = ev.group || "全般";
+          if (!grouped[g]) grouped[g] = [];
+          grouped[g].push(ev);
+        });
 
-          const parts = (ev.date || "").split("/");
-          const m = parts[0] ? parts[0] + "月" : "";
-          const d = parts[1] || ev.date || "";
+        for (let g in grouped) {
+          const gBanner = document.createElement("div");
+          gBanner.className = "group-banner";
+          gBanner.innerHTML = `🎤 ${g}`;
+          container.appendChild(gBanner);
 
-          card.innerHTML = `
-            <div class="date-box">
-              <span class="month">${m}</span>
-              <span class="day">${d}</span>
-            </div>
-            <div class="info-box">
-              <div class="venue">${ev.place || '会場未定'}</div>
-              <div class="time">開場:15:00 / 開演:15:45</div>
-              <span class="group-tag">${ev.group || 'モーニング娘。'}</span>
-            </div>
-            <div class="status-pill">${ev.status || '当選'}</div>
-            <button class="btn-delete" onclick="deleteEvent(${idx})">✕</button>
-          `;
-          container.appendChild(card);
+          grouped[g].forEach((ev, idx) => {
+            container.appendChild(createCard(ev, idx));
+          });
+        }
+      } else {
+        // 「日程順」「参戦予定」表示
+        if (currentSort === 'date') {
+          displayList.sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+        } else if (currentSort === 'schedule') {
+          displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
+        }
+
+        displayList.forEach((ev, idx) => {
+          container.appendChild(createCard(ev, idx));
         });
       }
+    }
+
+    function createCard(ev, idx) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const parts = (ev.date || "").split("/");
+      const m = parts[0] ? parts[0] + "月" : "";
+      const d = parts[1] || ev.date || "";
+
+      card.innerHTML = `
+        <div class="date-box">
+          <span class="month">${m}</span>
+          <span class="day">${d}</span>
+        </div>
+        <div class="info-box">
+          <div class="venue">${ev.place || '会場未定'}</div>
+          <div class="time">${ev.title || '特別公演'}</div>
+          <span class="group-tag">${ev.group || 'モーニング娘。'}</span>
+        </div>
+        <div class="status-pill">${ev.status || '当選'}</div>
+        <button class="btn-delete" onclick="deleteEvent(${idx})">✕</button>
+      `;
+      return card;
     }
 
     function processInput() {
@@ -407,8 +422,23 @@
       }
     }
 
-    function setSort(type) { currentSort = type; render(); }
-    function setFilter(type) { currentFilter = type; render(); }
+    function setSort(type, el) {
+      currentSort = type;
+      if (el) {
+        document.querySelectorAll(".top-nav-btn").forEach(b => b.classList.remove("active"));
+        el.classList.add("active");
+      }
+      render();
+    }
+
+    function setFilter(type, el) {
+      currentFilter = type;
+      if (el) {
+        document.querySelectorAll(".btn-filter-pill").forEach(b => b.classList.remove("active"));
+        el.classList.add("active");
+      }
+      render();
+    }
   </script>
 </body>
 </html>
