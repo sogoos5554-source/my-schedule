@@ -171,7 +171,7 @@
       border-radius: 10px;
       padding: 4px 6px;
       text-align: center;
-      min-width: 50px;
+      min-width: 52px;
       box-sizing: border-box;
       background: #fff;
     }
@@ -209,7 +209,7 @@
       border: 1px solid #ff4081;
       color: #d81b60;
       border-radius: 8px;
-      padding: 2px 8px;
+      padding: 2px 6px;
       font-size: 0.7rem;
       margin-top: 4px;
       background: #fff;
@@ -267,7 +267,7 @@
   <div class="input-card">
     <div class="input-title">💭 スケジュール一括貼り付け・指示入力</div>
     <div class="input-flex">
-      <textarea id="inputText" placeholder="スケジュール貼り付け / 例: 「10/18 申し込んだ！」"></textarea>
+      <textarea id="inputText" placeholder="JSONデータまたは文字を入力"></textarea>
       <button class="btn-send" onclick="processInput()">送信</button>
     </div>
 
@@ -278,10 +278,20 @@
     </div>
 
     <div class="manual-form" id="manualForm">
-      <input type="text" id="mGroup" class="form-control" placeholder="グループ名">
+      <select id="mGroup" class="form-control">
+        <option value="モーニング娘。">モーニング娘。</option>
+        <option value="アンジュルム">アンジュルム</option>
+        <option value="Juice=Juice">Juice=Juice</option>
+        <option value="つばきファクトリー">つばきファクトリー</option>
+        <option value="BEYOOOOONDS">BEYOOOOONDS</option>
+        <option value="OCHA NORMA">OCHA NORMA</option>
+        <option value="ロージークロニクル">ロージークロニクル</option>
+        <option value="ハロプロ研修生">ハロプロ研修生</option>
+        <option value="合同・OG">合同・OG</option>
+      </select>
       <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 8/21)">
-      <input type="text" id="mTitle" class="form-control" placeholder="公演名">
-      <input type="text" id="mPlace" class="form-control" placeholder="会場">
+      <input type="text" id="mTour" class="form-control" placeholder="ツアー名 / イベント名">
+      <input type="text" id="mPlace" class="form-control" placeholder="会場 (例: KT Zepp yokohama)">
       <button class="btn-sub-pill" style="width:100%; background:#ff5277; color:white;" onclick="addManualEvent()">追加</button>
     </div>
 
@@ -295,6 +305,19 @@
   <div id="eventList"></div>
 
   <script>
+    // ハロプログループ一覧定義
+    const HP_GROUPS = [
+      "モーニング娘。",
+      "アンジュルム",
+      "Juice=Juice",
+      "つばきファクトリー",
+      "BEYOOOOONDS",
+      "OCHA NORMA",
+      "ロージークロニクル",
+      "ハロプロ研修生",
+      "合同・OG"
+    ];
+
     const firebaseConfig = {
       apiKey: "AIzaSyD-placeholder",
       authDomain: "my-schedule-bf9ca.firebaseapp.com",
@@ -312,69 +335,35 @@
     let currentSort = 'group';
     let currentFilter = 'future';
 
+    // Firestoreとリアルタイム同期
     docRef.onSnapshot((doc) => {
       if (doc.exists && doc.data().list) {
-        let rawList = doc.data().list;
-        let cleanedList = [];
-
-        rawList.forEach(item => {
-          if (typeof item.title === 'string' && item.title.trim().startsWith('[')) {
-            try {
-              let parsed = JSON.parse(item.title);
-              if (Array.isArray(parsed)) {
-                cleanedList.push(...parsed);
-                return;
-              }
-            } catch(e) {}
-          }
-          cleanedList.push(item);
-        });
-
-        events = cleanedList;
+        events = doc.data().list;
         render();
       }
     });
 
     function saveToCloud() {
       docRef.set({ list: events }, { merge: true }).then(() => {
-        alert("クラウドに保存しました！");
+        alert("クラウドにデータを同期・保存しました！");
       }).catch((err) => {
         alert("保存エラー: " + err.message);
       });
     }
 
-    // 日付判定ロジック強化版
-    function parseDateObj(ev) {
-      // 1. すでに month と day が別々のプロパティで入っている場合
-      if (ev.month && (ev.day || ev.date_day)) {
-        let m = String(ev.month).replace(/[^\d]/g, '');
-        let d = String(ev.day || ev.date_day).replace(/[^\d]/g, '');
-        if (m && d) return { month: m + "月", day: d };
+    // 「8/21」や「8月21日」などの文字列から確実に「8月」と「21」を取り出す関数
+    function parseDate(dateStr) {
+      if (!dateStr) return { month: "未定", day: "--" };
+      let str = String(dateStr);
+      let matches = str.match(/(\d{1,2})[\/\-月](\d{1,2})/);
+      if (matches) {
+        return { month: parseInt(matches[1], 10) + "月", day: parseInt(matches[2], 10) };
       }
-
-      // 2. date, day, date_str など単一の文字列プロパティを検証
-      let val = ev.date || ev.day || ev.date_str || ev.event_date || ev.datetime || "";
-      
-      // 3. プロパティにない場合は title や whole text から抽出を試みる
-      if (!val && ev.title) val = ev.title;
-
-      if (val) {
-        let str = String(val).trim();
-        let matches = str.match(/(\d{1,2})[\/\-月](\d{1,2})/);
-        if (matches) {
-          return { month: parseInt(matches[1], 10) + "月", day: parseInt(matches[2], 10) };
-        }
-        
-        // 数値だけが抽出できるかチェック (例: "18")
-        let nums = str.match(/\d+/g);
-        if (nums && nums.length === 1) {
-          return { month: "月", day: nums[0] };
-        } else if (nums && nums.length >= 2) {
-          return { month: parseInt(nums[nums.length-2], 10) + "月", day: parseInt(nums[nums.length-1], 10) };
-        }
+      let nums = str.match(/\d+/g);
+      if (nums && nums.length >= 2) {
+        return { month: parseInt(nums[0], 10) + "月", day: parseInt(nums[1], 10) };
       }
-
-      return { month: "未定", day: "--" };
+      return { month: "日付", day: str };
     }
 
     function render() {
@@ -389,7 +378,7 @@
       let displayList = [...events];
 
       if (currentFilter === 'end') {
-        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了' || ev.status === '抽選終了');
+        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了');
       }
 
       if (currentSort === 'group') {
@@ -408,7 +397,7 @@
 
           let tourGrouped = {};
           grouped[g].forEach(ev => {
-            let tourName = ev.tour || ev.tour_title || ev.title || "特別公演";
+            let tourName = ev.tour || ev.title || "特別公演";
             if (!tourGrouped[tourName]) tourGrouped[tourName] = [];
             tourGrouped[tourName].push(ev);
           });
@@ -426,11 +415,7 @@
         }
       } else {
         if (currentSort === 'date') {
-          displayList.sort((a,b) => {
-            let dA = parseDateObj(a);
-            let dB = parseDateObj(b);
-            return (dA.month + dA.day).localeCompare(dB.month + dB.day);
-          });
+          displayList.sort((a,b) => (a.date || "").localeCompare(b.date || ""));
         } else if (currentSort === 'schedule') {
           displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
         }
@@ -445,14 +430,19 @@
       const card = document.createElement("div");
       card.className = "card";
 
-      const dateObj = parseDateObj(ev);
-      const targetId = ev.id || ev.title || Math.random().toString();
+      const dateObj = parseDate(ev.date || ev.day);
+      const targetId = ev.id || Math.random().toString();
 
-      const venueName = ev.venue || ev.place || ev.location || '会場未定';
+      const venueName = ev.venue || ev.place || '会場未定';
       const openTime = ev.open_time || ev.open || '15:00';
       const startTime = ev.start_time || ev.start || '15:45';
-      const groupName = ev.group || 'モーニング娘。';
-      const statusText = ev.status || '未応募';
+      const currentGroup = ev.group || 'モーニング娘。';
+      const statusText = ev.status || '当選';
+
+      // ハロプロ全グループ選択用のドロップダウン
+      let optionsHtml = HP_GROUPS.map(g => 
+        `<option value="${g}" ${g === currentGroup ? 'selected' : ''}>${g}</option>`
+      ).join('');
 
       card.innerHTML = `
         <div class="date-box">
@@ -462,19 +452,28 @@
         <div class="info-box">
           <div class="venue">${venueName}</div>
           <div class="time">開場:${openTime} / 開演:${startTime}</div>
-          <select class="group-select">
-            <option selected>${groupName}</option>
+          <select class="group-select" onchange="changeGroup('${targetId}', this.value)">
+            ${optionsHtml}
           </select>
         </div>
         <div class="status-pill">${statusText}</div>
-        <button class="btn-delete" onclick="deleteEventByItem('${targetId}')">✕</button>
+        <button class="btn-delete" onclick="deleteEvent('${targetId}')">✕</button>
       `;
       return card;
     }
 
-    function deleteEventByItem(targetId) {
+    // グループ変更＆自動保存
+    function changeGroup(targetId, newGroup) {
+      let item = events.find(e => (e.id || '') === targetId);
+      if (item) {
+        item.group = newGroup;
+        saveToCloud();
+      }
+    }
+
+    function deleteEvent(targetId) {
       if (confirm("削除しますか？")) {
-        events = events.filter(item => (item.id || item.title) !== targetId);
+        events = events.filter(item => (item.id || '') !== targetId);
         render();
         saveToCloud();
       }
@@ -484,22 +483,24 @@
       const t = document.getElementById("inputText").value.trim();
       if (!t) return;
 
-      if (t.startsWith('[') || t.startsWith('{')) {
-        try {
-          let parsed = JSON.parse(t);
-          if (Array.isArray(parsed)) {
-            events.push(...parsed);
-          } else {
-            events.push(parsed);
-          }
-          document.getElementById("inputText").value = "";
-          render();
-          saveToCloud();
-          return;
-        } catch(e) {}
+      try {
+        let parsed = JSON.parse(t);
+        if (Array.isArray(parsed)) {
+          events.push(...parsed);
+        } else {
+          events.push(parsed);
+        }
+      } catch(e) {
+        events.push({
+          id: Date.now().toString(),
+          group: "モーニング娘。",
+          date: "8/21",
+          tour: "さくらのしらべ FINAL",
+          venue: t,
+          status: "当選"
+        });
       }
 
-      events.push({ id: Date.now().toString(), group: "モーニング娘。", date: "8/21", title: t, venue: "神奈川県 KT Zepp yokohama", status: "当選" });
       document.getElementById("inputText").value = "";
       render();
       saveToCloud();
@@ -513,9 +514,18 @@
     function addManualEvent() {
       const g = document.getElementById("mGroup").value;
       const d = document.getElementById("mDate").value;
-      const t = document.getElementById("mTitle").value;
+      const tour = document.getElementById("mTour").value;
       const p = document.getElementById("mPlace").value;
-      events.push({ id: Date.now().toString(), group: g || "モーニング娘。", date: d || "8/21", title: t, venue: p, status: "当選" });
+
+      events.push({
+        id: Date.now().toString(),
+        group: g,
+        date: d || "8/21",
+        tour: tour || "単独公演",
+        venue: p || "会場未定",
+        status: "当選"
+      });
+
       toggleManualForm();
       render();
       saveToCloud();
