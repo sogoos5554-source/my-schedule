@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>公演管理ツール</title>
   
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -256,18 +255,16 @@
 </head>
 <body>
 
-  <!-- トップタブ -->
   <div class="top-nav">
     <button class="top-nav-btn" onclick="setSort('date', this)">📅 日程順</button>
     <button class="top-nav-btn active" onclick="setSort('group', this)">🎤 グループ別</button>
     <button class="top-nav-btn" onclick="setSort('schedule', this)">✏️ 参戦予定</button>
   </div>
 
-  <!-- 入力エリア -->
   <div class="input-card">
     <div class="input-title">💭 スケジュール一括貼り付け・指示入力</div>
     <div class="input-flex">
-      <textarea id="inputText" placeholder="JSONデータまたは文字を入力"></textarea>
+      <textarea id="inputText" placeholder="JSONデータまたはテキストを入力"></textarea>
       <button class="btn-send" onclick="processInput()">送信</button>
     </div>
 
@@ -289,9 +286,10 @@
         <option value="ハロプロ研修生">ハロプロ研修生</option>
         <option value="合同・OG">合同・OG</option>
       </select>
-      <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 8/21)">
+      <input type="text" id="mMonth" class="form-control" placeholder="月 (例: 10月)">
+      <input type="text" id="mDay" class="form-control" placeholder="日 (例: 18)">
       <input type="text" id="mTour" class="form-control" placeholder="ツアー名 / イベント名">
-      <input type="text" id="mPlace" class="form-control" placeholder="会場 (例: KT Zepp yokohama)">
+      <input type="text" id="mPlace" class="form-control" placeholder="会場">
       <button class="btn-sub-pill" style="width:100%; background:#ff5277; color:white;" onclick="addManualEvent()">追加</button>
     </div>
 
@@ -305,7 +303,6 @@
   <div id="eventList"></div>
 
   <script>
-    // ハロプログループ一覧定義
     const HP_GROUPS = [
       "モーニング娘。",
       "アンジュルム",
@@ -335,35 +332,37 @@
     let currentSort = 'group';
     let currentFilter = 'future';
 
-    // Firestoreとリアルタイム同期
+    // Firestore読み込み＆自動解析
     docRef.onSnapshot((doc) => {
       if (doc.exists && doc.data().list) {
-        events = doc.data().list;
+        let rawList = doc.data().list;
+        let flatList = [];
+
+        rawList.forEach(item => {
+          // もし文字列としてJSONが入っていたら展開する
+          if (typeof item === 'string' && item.trim().startsWith('[')) {
+            try { flatList.push(...JSON.parse(item)); return; } catch(e){}
+          }
+          if (item && typeof item.venue === 'string' && item.venue.trim().startsWith('[')) {
+            try { flatList.push(...JSON.parse(item.venue)); return; } catch(e){}
+          }
+          if (item && typeof item.title === 'string' && item.title.trim().startsWith('[')) {
+            try { flatList.push(...JSON.parse(item.title)); return; } catch(e){}
+          }
+          flatList.push(item);
+        });
+
+        events = flatList;
         render();
       }
     });
 
     function saveToCloud() {
-      docRef.set({ list: events }, { merge: true }).then(() => {
-        alert("クラウドにデータを同期・保存しました！");
+      docRef.set({ list: events }).then(() => {
+        alert("クラウドに保存しました！");
       }).catch((err) => {
         alert("保存エラー: " + err.message);
       });
-    }
-
-    // 「8/21」や「8月21日」などの文字列から確実に「8月」と「21」を取り出す関数
-    function parseDate(dateStr) {
-      if (!dateStr) return { month: "未定", day: "--" };
-      let str = String(dateStr);
-      let matches = str.match(/(\d{1,2})[\/\-月](\d{1,2})/);
-      if (matches) {
-        return { month: parseInt(matches[1], 10) + "月", day: parseInt(matches[2], 10) };
-      }
-      let nums = str.match(/\d+/g);
-      if (nums && nums.length >= 2) {
-        return { month: parseInt(nums[0], 10) + "月", day: parseInt(nums[1], 10) };
-      }
-      return { month: "日付", day: str };
     }
 
     function render() {
@@ -378,7 +377,7 @@
       let displayList = [...events];
 
       if (currentFilter === 'end') {
-        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了');
+        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了' || ev.status === '抽選終了');
       }
 
       if (currentSort === 'group') {
@@ -414,12 +413,6 @@
           }
         }
       } else {
-        if (currentSort === 'date') {
-          displayList.sort((a,b) => (a.date || "").localeCompare(b.date || ""));
-        } else if (currentSort === 'schedule') {
-          displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
-        }
-
         displayList.forEach((ev) => {
           container.appendChild(createCard(ev));
         });
@@ -430,24 +423,26 @@
       const card = document.createElement("div");
       card.className = "card";
 
-      const dateObj = parseDate(ev.date || ev.day);
-      const targetId = ev.id || Math.random().toString();
+      // データにそのまま入っている month と day を直接表示
+      let displayMonth = ev.month || "月";
+      if (displayMonth && !displayMonth.includes("月")) displayMonth += "月";
+      let displayDay = ev.day || "--";
 
-      const venueName = ev.venue || ev.place || '会場未定';
-      const openTime = ev.open_time || ev.open || '15:00';
-      const startTime = ev.start_time || ev.start || '15:45';
+      const targetId = ev.id || Math.random().toString();
+      const venueName = ev.venue || '会場未定';
+      const openTime = ev.openTime || ev.open || '15:00';
+      const startTime = ev.startTime || ev.start || '15:45';
       const currentGroup = ev.group || 'モーニング娘。';
       const statusText = ev.status || '当選';
 
-      // ハロプロ全グループ選択用のドロップダウン
       let optionsHtml = HP_GROUPS.map(g => 
         `<option value="${g}" ${g === currentGroup ? 'selected' : ''}>${g}</option>`
       ).join('');
 
       card.innerHTML = `
         <div class="date-box">
-          <span class="month">${dateObj.month}</span>
-          <span class="day">${dateObj.day}</span>
+          <span class="month">${displayMonth}</span>
+          <span class="day">${displayDay}</span>
         </div>
         <div class="info-box">
           <div class="venue">${venueName}</div>
@@ -462,9 +457,8 @@
       return card;
     }
 
-    // グループ変更＆自動保存
     function changeGroup(targetId, newGroup) {
-      let item = events.find(e => (e.id || '') === targetId);
+      let item = events.find(e => String(e.id) === String(targetId));
       if (item) {
         item.group = newGroup;
         saveToCloud();
@@ -473,7 +467,7 @@
 
     function deleteEvent(targetId) {
       if (confirm("削除しますか？")) {
-        events = events.filter(item => (item.id || '') !== targetId);
+        events = events.filter(item => String(item.id) !== String(targetId));
         render();
         saveToCloud();
       }
@@ -494,8 +488,9 @@
         events.push({
           id: Date.now().toString(),
           group: "モーニング娘。",
-          date: "8/21",
-          tour: "さくらのしらべ FINAL",
+          month: "8月",
+          day: "21",
+          tour: "特別公演",
           venue: t,
           status: "当選"
         });
@@ -513,14 +508,16 @@
 
     function addManualEvent() {
       const g = document.getElementById("mGroup").value;
-      const d = document.getElementById("mDate").value;
+      const m = document.getElementById("mMonth").value;
+      const d = document.getElementById("mDay").value;
       const tour = document.getElementById("mTour").value;
       const p = document.getElementById("mPlace").value;
 
       events.push({
         id: Date.now().toString(),
         group: g,
-        date: d || "8/21",
+        month: m || "8月",
+        day: d || "21",
         tour: tour || "単独公演",
         venue: p || "会場未定",
         status: "当選"
