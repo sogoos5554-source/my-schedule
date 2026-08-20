@@ -283,8 +283,7 @@
         <option value="BEYOOOOONDS">BEYOOOOONDS</option>
         <option value="OCHA NORMA">OCHA NORMA</option>
         <option value="ロージークロニクル">ロージークロニクル</option>
-        <option value="ハロプロ研修生">ハロプロ研修生</option>
-        <option value="合同・OG">合同・OG</option>
+        <option value="ハロプロ">ハロプロ</option>
       </select>
       <input type="text" id="mMonth" class="form-control" placeholder="月 (例: 10月)">
       <input type="text" id="mDay" class="form-control" placeholder="日 (例: 18)">
@@ -311,8 +310,7 @@
       "BEYOOOOONDS",
       "OCHA NORMA",
       "ロージークロニクル",
-      "ハロプロ研修生",
-      "合同・OG"
+      "ハロプロ"
     ];
 
     const firebaseConfig = {
@@ -332,14 +330,12 @@
     let currentSort = 'group';
     let currentFilter = 'future';
 
-    // Firestore読み込み＆自動解析
     docRef.onSnapshot((doc) => {
       if (doc.exists && doc.data().list) {
         let rawList = doc.data().list;
         let flatList = [];
 
         rawList.forEach(item => {
-          // もし文字列としてJSONが入っていたら展開する
           if (typeof item === 'string' && item.trim().startsWith('[')) {
             try { flatList.push(...JSON.parse(item)); return; } catch(e){}
           }
@@ -376,8 +372,18 @@
 
       let displayList = [...events];
 
+      // 「参戦予定」タブが押された場合は「当選」「応募済み」に絞り込み
+      if (currentSort === 'schedule') {
+        displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
+      }
+
+      // 下部フィルター処理
       if (currentFilter === 'end') {
-        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了' || ev.status === '抽選終了');
+        // 落選、または（当選でかつ終了したもの）を対象
+        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了' || ev.status === '参戦済み');
+      } else if (currentFilter === 'future') {
+        // 終了・落選を除く今後の公演
+        displayList = displayList.filter(ev => ev.status !== '落選' && ev.status !== '終了' && ev.status !== '参戦済み');
       }
 
       if (currentSort === 'group') {
@@ -423,7 +429,6 @@
       const card = document.createElement("div");
       card.className = "card";
 
-      // データにそのまま入っている month と day を直接表示
       let displayMonth = ev.month || "月";
       if (displayMonth && !displayMonth.includes("月")) displayMonth += "月";
       let displayDay = ev.day || "--";
