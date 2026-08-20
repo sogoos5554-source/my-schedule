@@ -267,12 +267,11 @@
       <button class="btn-send" onclick="handleInput()">送信</button>
     </div>
     
-    <div id="msgArea" class="msg-area"></div>
+    <div id="msgArea" class="msg-area">通信中...</div>
 
     <div class="action-btns">
       <button class="btn-sub" onclick="toggleManualForm()">＋ 手動追加</button>
-      <button class="btn-sub" onclick="exportData()">📱 バックアップ出力</button>
-      <button class="btn-sub" onclick="resetData()">初期化</button>
+      <button class="btn-sub" onclick="resetData()">全消去</button>
     </div>
 
     <div class="filter-section">
@@ -305,14 +304,50 @@
 
   <div id="eventList"></div>
 
+  <!-- Firebase SDK の読み込み -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
   <script>
-    let events = JSON.parse(localStorage.getItem('hp_events') || '[]');
+    // 画面から読み取った設定情報
+    const firebaseConfig = {
+      apiKey: "AIzaSyD9mwKY95Na7v0Y6gq2QDH7pGCvh6BPxOw",
+      authDomain: "my-schedule-bf9ca.firebaseapp.com",
+      projectId: "my-schedule-bf9ca",
+      storageBucket: "my-schedule-bf9ca.firebasestorage.app",
+      messagingSenderId: "814031929130",
+      appId: "1:814031929130:web:4c685505db40f547f42853"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let events = [];
     let currentTab = 'group';
     let currentFilter = 'upcoming';
 
-    function saveData() {
-      localStorage.setItem('hp_events', JSON.stringify(events));
+    // Firestoreからリアルタイムでデータを監視・取得
+    db.collection('events').doc('main_schedule').onSnapshot(doc => {
+      if (doc.exists && doc.data().list) {
+        events = doc.data().list;
+        showMsg('☁️ リアルタイム同期完了');
+      } else {
+        events = [];
+        showMsg('☁️ データは空です');
+      }
       render();
+    }, err => {
+      console.error(err);
+      showMsg('⚠️ 同期エラー（Databaseのルール設定を確認してください）');
+    });
+
+    function saveData() {
+      db.collection('events').doc('main_schedule').set({ list: events })
+        .then(() => showMsg('☁️ クラウドに保存しました！'))
+        .catch(err => {
+          console.error(err);
+          showMsg('⚠️ 保存に失敗しました。');
+        });
     }
 
     function showMsg(text) {
@@ -365,16 +400,6 @@
     function handleInput() {
       const text = document.getElementById('inputText').value.trim();
       if (!text) return;
-
-      if (text.startsWith('[') && text.endsWith(']')) {
-        try {
-          events = JSON.parse(text);
-          saveData();
-          showMsg('📋 バックアップ用データを復元しました！');
-          document.getElementById('inputText').value = '';
-          return;
-        } catch (e) {}
-      }
 
       const isApplied = /(応募|申し込んだ|申込|エントリー|申し込む)/.test(text);
       const isWon = /(当選|当たった|チケット取れた|参戦確定|ご用意された)/.test(text);
@@ -476,7 +501,7 @@
         document.getElementById('inputText').value = '';
         showMsg('🎉 スケジュールを追加しました！');
       } else {
-        showMsg('⚠️ 処理できる日付データまたは対象の公演が見つかりませんでした。');
+        showMsg('⚠️ 処理できる日付データが見つかりませんでした。');
       }
     }
 
@@ -505,13 +530,6 @@
       saveData();
       toggleManualForm();
       showMsg('➕ 手動で公演を追加しました！');
-    }
-
-    function exportData() {
-      const dataStr = JSON.stringify(events);
-      navigator.clipboard.writeText(dataStr).then(() => {
-        showMsg('📋 バックアップ用データをコピーしました！');
-      });
     }
 
     function resetData() {
@@ -685,8 +703,6 @@
         saveData();
       }
     }
-
-    render();
   </script>
 </body>
 </html>
