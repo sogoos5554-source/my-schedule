@@ -126,7 +126,7 @@
       border-color: #ff5277;
     }
 
-    .group-banner {
+    .month-banner {
       background: linear-gradient(90deg, #ff758c, #ff7eb3);
       color: white;
       padding: 8px 14px;
@@ -140,7 +140,7 @@
       gap: 6px;
     }
 
-    .tour-banner {
+    .group-banner {
       color: #880e4f;
       background: #fce4ec;
       padding: 6px 10px;
@@ -256,8 +256,8 @@
 <body>
 
   <div class="top-nav">
-    <button class="top-nav-btn" onclick="setSort('date', this)">📅 日程順</button>
-    <button class="top-nav-btn active" onclick="setSort('group', this)">🎤 グループ別</button>
+    <button class="top-nav-btn" onclick="setSort('group', this)">🎤 グループ別</button>
+    <button class="top-nav-btn active" onclick="setSort('date', this)">📅 日程順（月別）</button>
     <button class="top-nav-btn" onclick="setSort('schedule', this)">✏️ 参戦予定</button>
   </div>
 
@@ -327,7 +327,7 @@
     const docRef = db.collection("events").doc("main_schedule");
 
     let events = [];
-    let currentSort = 'group';
+    let currentSort = 'date';
     let currentFilter = 'future';
 
     docRef.onSnapshot((doc) => {
@@ -359,6 +359,19 @@
       });
     }
 
+    // 月と日の数字を抽出して綺麗に並び替える補助関数
+    function parseMonthNum(mStr) {
+      if (!mStr) return 99;
+      let m = parseInt(mStr.replace(/[^0-9]/g, ''));
+      return isNaN(m) ? 99 : m;
+    }
+
+    function parseDayNum(dStr) {
+      if (!dStr) return 99;
+      let d = parseInt(String(dStr).replace(/[^0-9]/g, ''));
+      return isNaN(d) ? 99 : d;
+    }
+
     function render() {
       const container = document.getElementById("eventList");
       container.innerHTML = "";
@@ -370,9 +383,9 @@
 
       let displayList = [...events];
 
-      // 1. 上部タブ（日程順・グループ別・参戦予定）の絞り込み
+      // 1. 上部タブの絞り込み（参戦予定は「当選」のみ）
       if (currentSort === 'schedule') {
-        displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
+        displayList = displayList.filter(ev => ev.status === '当選');
       }
 
       // 2. 下部フィルターの絞り込み
@@ -396,7 +409,6 @@
           grouped[g].push(ev);
         });
 
-        // 定義順にグループを表示し、定義外のグループがあれば後ろに追加する
         let orderedGroups = HP_GROUPS.filter(g => grouped[g]);
         Object.keys(grouped).forEach(g => {
           if (!orderedGroups.includes(g)) orderedGroups.push(g);
@@ -404,7 +416,7 @@
 
         orderedGroups.forEach(g => {
           const gBanner = document.createElement("div");
-          gBanner.className = "group-banner";
+          gBanner.className = "month-banner";
           gBanner.innerHTML = `🎤 ${g}`;
           container.appendChild(gBanner);
 
@@ -417,9 +429,12 @@
 
           for (let tourName in tourGrouped) {
             const tBanner = document.createElement("div");
-            tBanner.className = "tour-banner";
+            tBanner.className = "group-banner";
             tBanner.innerHTML = `📢 ${tourName}`;
             container.appendChild(tBanner);
+
+            // ツアー内も日付順にソート
+            tourGrouped[tourName].sort((a, b) => parseDayNum(a.day) - parseDayNum(b.day));
 
             tourGrouped[tourName].forEach(ev => {
               container.appendChild(createCard(ev));
@@ -427,9 +442,40 @@
           }
         });
       } else {
-        // 日程順 または 参戦予定タブ
+        // 月別・日程順 または 参戦予定
+        // まず全体のリストを「月」の昇順、次に「日」の昇順に確実にソートする
+        displayList.sort((a, b) => {
+          let mDiff = parseMonthNum(a.month) - parseMonthNum(b.month);
+          if (mDiff !== 0) return mDiff;
+          return parseDayNum(a.day) - parseDayNum(b.day);
+        });
+
+        // 月ごとにグルーピング
+        let monthGrouped = {};
+        let monthKeys = [];
+        
         displayList.forEach((ev) => {
-          container.appendChild(createCard(ev));
+          let m = ev.month || "未定";
+          if (!m.includes("月")) m += "月";
+          if (!monthGrouped[m]) {
+            monthGrouped[m] = [];
+            monthKeys.push(m);
+          }
+          monthGrouped[m].push(ev);
+        });
+
+        // 月順も正しくソート（数字の小さい順）
+        monthKeys.sort((a, b) => parseMonthNum(a) - parseMonthNum(b));
+
+        monthKeys.forEach(m => {
+          const mBanner = document.createElement("div");
+          mBanner.className = "month-banner";
+          mBanner.innerHTML = `📅 ${m}`;
+          container.appendChild(mBanner);
+
+          monthGrouped[m].forEach(ev => {
+            container.appendChild(createCard(ev));
+          });
         });
       }
     }
