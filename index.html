@@ -3,71 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>公演管理ツール</title>
-  
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
+  <title>ハロプロ公演管理ツール</title>
   <style>
-    :root {
-      --primary: #ff5252;
-      --bg: #fff0f3;
-      --card-bg: #ffffff;
-      --text: #2c3e50;
-    }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fdf0f5;
       margin: 0;
-      padding: 12px;
-      padding-bottom: 60px;
+      padding: 16px;
+      color: #333;
     }
 
-    .top-nav {
+    .tabs {
       display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
-    .top-nav-btn {
+    .tab {
       flex: 1;
-      padding: 10px 0;
-      border: none;
-      border-radius: 12px;
       background: #ffffff;
-      color: #666;
+      border: 2px solid #ffdeeb;
+      border-radius: 12px;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 0.9rem;
       font-weight: bold;
-      font-size: 0.85rem;
+      color: #888;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     }
-    .top-nav-btn.active {
-      background: linear-gradient(135deg, #e040fb, #ab47bc);
+    .tab.active {
+      background: linear-gradient(135deg, #e65cff, #e032e6);
+      border-color: transparent;
       color: #ffffff;
-      box-shadow: 0 3px 8px rgba(224, 64, 251, 0.3);
+      box-shadow: 0 4px 10px rgba(224, 50, 230, 0.3);
     }
 
     .input-card {
-      background: var(--card-bg);
+      background: #ffffff;
+      border: 2px solid #ffdeeb;
       border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-      margin-bottom: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(255, 182, 193, 0.15);
     }
     .input-title {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: bold;
-      color: #6a1b9a;
-      margin-bottom: 8px;
+      color: #7a1c6a;
+      margin-bottom: 10px;
     }
-    .input-flex {
+    .input-row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
     textarea {
       flex: 1;
-      height: 60px;
+      height: 70px;
       border: 1px solid #ffccd5;
       border-radius: 10px;
       padding: 8px;
@@ -76,484 +66,625 @@
       outline: none;
     }
     .btn-send {
-      background: #e040fb;
+      width: 70px;
+      background: linear-gradient(135deg, #e65cff, #e032e6);
       color: white;
       border: none;
-      border-radius: 12px;
-      width: 60px;
+      border-radius: 10px;
       font-weight: bold;
+      font-size: 0.95rem;
       cursor: pointer;
     }
 
-    .sub-btn-group {
+    .msg-area {
+      font-size: 0.8rem;
+      color: #d81b60;
+      margin: 8px 0;
+      min-height: 1.2em;
+      font-weight: bold;
+    }
+
+    .action-btns {
       display: flex;
       gap: 8px;
-      margin-top: 10px;
+      margin-bottom: 12px;
     }
-    .btn-sub-pill {
-      border: 1px solid #ffccd5;
+    .btn-sub {
       background: #ffffff;
-      color: #d81b60;
-      border-radius: 12px;
+      border: 1.5px solid #ffb3c1;
+      border-radius: 8px;
       padding: 6px 12px;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: bold;
+      color: #a4133c;
       cursor: pointer;
     }
 
-    .filter-group {
+    .filter-section {
       display: flex;
       gap: 6px;
-      margin-top: 12px;
-      padding-top: 12px;
+      padding-top: 10px;
       border-top: 1px dashed #ffccd5;
     }
-    .btn-filter-pill {
+    .btn-filter {
       flex: 1;
+      background: #fff5f7;
       border: 1px solid #ffccd5;
-      background: #ffffff;
-      color: #666;
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 6px 0;
       font-size: 0.75rem;
       font-weight: bold;
+      color: #7a1c6a;
       cursor: pointer;
       text-align: center;
     }
-    .btn-filter-pill.active {
-      background: #ff5277;
-      color: white;
-      border-color: #ff5277;
-    }
-
-    .group-banner {
-      background: linear-gradient(90deg, #ff758c, #ff7eb3);
-      color: white;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 0.9rem;
-      margin-top: 14px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .tour-banner {
-      color: #880e4f;
-      background: #fce4ec;
-      padding: 6px 10px;
-      border-left: 4px solid #e040fb;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 0.85rem;
-      margin-top: 10px;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 14px;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-    }
-    .date-box {
-      border: 1.5px solid #2c3e50;
-      border-radius: 10px;
-      padding: 4px 6px;
-      text-align: center;
-      min-width: 52px;
-      box-sizing: border-box;
-      background: #fff;
-    }
-    .month {
-      font-size: 0.65rem;
-      font-weight: bold;
-      display: block;
-      color: #333;
-    }
-    .day {
-      font-size: 1.1rem;
-      font-weight: 800;
-      line-height: 1;
-      color: #000;
-    }
-    .info-box {
-      flex: 1;
-      overflow: hidden;
-    }
-    .venue {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #2c3e50;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .time {
-      font-size: 0.7rem;
-      color: #888;
-      margin-top: 2px;
-    }
-    
-    .group-select {
-      border: 1px solid #ff4081;
-      color: #d81b60;
-      border-radius: 8px;
-      padding: 2px 6px;
-      font-size: 0.7rem;
-      margin-top: 4px;
-      background: #fff;
-      font-weight: bold;
-      outline: none;
-    }
-
-    .status-pill {
-      background: #e8f5e9;
-      color: #2e7d32;
-      border: none;
-      border-radius: 10px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-
-    .btn-delete {
-      color: #ff8a80;
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 4px 8px;
+    .btn-filter.active {
+      background: #ff70a6;
+      color: #ffffff;
+      border-color: #ff70a6;
     }
 
     .manual-form {
       display: none;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px dashed #ffccd5;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #ffb3c1;
     }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .form-full { grid-column: span 2; }
     .form-control {
-      width: 100%;
       padding: 6px 8px;
-      margin-bottom: 6px;
       border: 1px solid #ffccd5;
       border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
+      width: 100%;
       box-sizing: border-box;
+    }
+
+    .group-header {
+      background: linear-gradient(90deg, #ff70a6, #ff9770);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .month-header {
+      background: linear-gradient(90deg, #d81b60, #ff4081);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .tour-sub-header {
+      color: #8c1d40;
+      font-size: 0.85rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      margin: 10px 0 6px 4px;
+      border-left: 3px solid #ff70a6;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      border: 1px solid #fff0f5;
+    }
+    .card.past-event {
+      opacity: 0.6;
+      background: #f8fafc;
+    }
+
+    .date-box {
+      border: 2px solid #4a5568;
+      border-radius: 12px;
+      width: 58px;
+      height: 54px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .date-month { font-size: 0.65rem; font-weight: bold; color: #2d3748; }
+    .date-day { font-size: 1.1rem; font-weight: 800; color: #1a202c; line-height: 1; }
+
+    .card-info { flex: 1; min-width: 0; }
+    .venue-name { font-size: 0.9rem; font-weight: bold; color: #2d3748; white-space: normal; word-break: break-all; }
+    .time-info { font-size: 0.75rem; color: #718096; margin-top: 2px; }
+    .group-select {
+      margin-top: 4px;
+      border: 1px solid #ffccd5;
+      border-radius: 6px;
+      color: #d81b60;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 1px 4px;
+      background: #fff5f7;
+    }
+
+    .status-badge {
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 0.75rem;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      min-width: 68px;
+      text-align: center;
+    }
+    .status-badge.applied { background: #e0f2fe; color: #0284c7; }
+    .status-badge.won { background: #dcfce7; color: #15803d; }
+    .status-badge.lost { background: #fee2e2; color: #b91c1c; }
+    .status-badge.closed { background: #f3e8ff; color: #7e22ce; }
+    .status-badge.ended { background: #e2e8f0; color: #475569; }
+    
+    .btn-delete {
+      color: #ff8fa3;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 4px;
     }
   </style>
 </head>
 <body>
 
-  <div class="top-nav">
-    <button class="top-nav-btn" onclick="setSort('date', this)">📅 日程順</button>
-    <button class="top-nav-btn active" onclick="setSort('group', this)">🎤 グループ別</button>
-    <button class="top-nav-btn" onclick="setSort('schedule', this)">✏️ 参戦予定</button>
+  <div class="tabs">
+    <div class="tab" onclick="switchTab('all', this)">📅 日程順</div>
+    <div class="tab active" onclick="switchTab('group', this)">🎤 グループ別</div>
+    <div class="tab" onclick="switchTab('attending', this)">🎟 参戦予定</div>
   </div>
 
   <div class="input-card">
     <div class="input-title">💭 スケジュール一括貼り付け・指示入力</div>
-    <div class="input-flex">
-      <textarea id="inputText" placeholder="JSONデータまたはテキストを入力"></textarea>
-      <button class="btn-send" onclick="processInput()">送信</button>
+    <div class="input-row">
+      <textarea id="inputText" placeholder="スケジュール貼り付け / 例: 「10/18 申し込んだ！」"></textarea>
+      <button class="btn-send" onclick="handleInput()">送信</button>
+    </div>
+    
+    <div id="msgArea" class="msg-area"></div>
+
+    <div class="action-btns">
+      <button class="btn-sub" onclick="toggleManualForm()">＋ 手動追加</button>
+      <button class="btn-sub" onclick="exportData()">📱 バックアップ出力</button>
+      <button class="btn-sub" onclick="resetData()">初期化</button>
     </div>
 
-    <div class="sub-btn-group">
-      <button class="btn-sub-pill" onclick="toggleManualForm()">＋ 手動追加</button>
-      <button class="btn-sub-pill" onclick="saveToCloud()">💾 バックアップ保存</button>
-      <button class="btn-sub-pill" onclick="resetData()">初期化</button>
+    <div class="filter-section">
+      <button class="btn-filter" onclick="setFilter('all', this)">🌐 全部の公演</button>
+      <button class="btn-filter active" onclick="setFilter('upcoming', this)">✨ 今後の公演</button>
+      <button class="btn-filter" onclick="setFilter('archive', this)">📦 終了・落選</button>
     </div>
 
-    <div class="manual-form" id="manualForm">
-      <select id="mGroup" class="form-control">
-        <option value="モーニング娘。">モーニング娘。</option>
-        <option value="アンジュルム">アンジュルム</option>
-        <option value="Juice=Juice">Juice=Juice</option>
-        <option value="つばきファクトリー">つばきファクトリー</option>
-        <option value="BEYOOOOONDS">BEYOOOOONDS</option>
-        <option value="OCHA NORMA">OCHA NORMA</option>
-        <option value="ロージークロニクル">ロージークロニクル</option>
-        <option value="ハロプロ">ハロプロ</option>
-      </select>
-      <input type="text" id="mMonth" class="form-control" placeholder="月 (例: 10月)">
-      <input type="text" id="mDay" class="form-control" placeholder="日 (例: 18)">
-      <input type="text" id="mTour" class="form-control" placeholder="ツアー名 / イベント名">
-      <input type="text" id="mPlace" class="form-control" placeholder="会場">
-      <button class="btn-sub-pill" style="width:100%; background:#ff5277; color:white;" onclick="addManualEvent()">追加</button>
-    </div>
-
-    <div class="filter-group">
-      <button class="btn-filter-pill" onclick="setFilter('all', this)">🌐 全部の公演</button>
-      <button class="btn-filter-pill active" onclick="setFilter('future', this)">✨ 今後の公演</button>
-      <button class="btn-filter-pill" onclick="setFilter('end', this)">📦 終了・落選</button>
+    <div id="manualForm" class="manual-form">
+      <div class="form-grid">
+        <input type="text" id="mTour" class="form-control form-full" placeholder="公演名・ツアー名（任意）">
+        <select id="mGroup" class="form-control">
+          <option>OCHA NORMA</option>
+          <option>モーニング娘。</option>
+          <option>アンジュルム</option>
+          <option>Juice=Juice</option>
+          <option>つばきファクトリー</option>
+          <option>BEYOOOOONDS</option>
+          <option>ロージークロニクル</option>
+        </select>
+        <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/18)">
+        <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名">
+        <input type="text" id="mOpen" class="form-control" placeholder="開場 14:15">
+        <input type="text" id="mStart" class="form-control" placeholder="開演 15:00">
+      </div>
+      <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none;" onclick="addManualEvent()">追加する</button>
     </div>
   </div>
 
   <div id="eventList"></div>
 
   <script>
-    const HP_GROUPS = [
-      "モーニング娘。",
-      "アンジュルム",
-      "Juice=Juice",
-      "つばきファクトリー",
-      "BEYOOOOONDS",
-      "OCHA NORMA",
-      "ロージークロニクル",
-      "ハロプロ"
-    ];
+    let events = JSON.parse(localStorage.getItem('hp_events') || '[]');
+    let currentTab = 'group';
+    let currentFilter = 'upcoming';
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-placeholder",
-      authDomain: "my-schedule-bf9ca.firebaseapp.com",
-      projectId: "my-schedule-bf9ca",
-      storageBucket: "my-schedule-bf9ca.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcde"
-    };
+    function saveData() {
+      localStorage.setItem('hp_events', JSON.stringify(events));
+      render();
+    }
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const docRef = db.collection("events").doc("main_schedule");
+    function showMsg(text) {
+      document.getElementById('msgArea').innerText = text;
+    }
 
-    let events = [];
-    let currentSort = 'group';
-    let currentFilter = 'future';
+    function toggleManualForm() {
+      const form = document.getElementById('manualForm');
+      form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
 
-    docRef.onSnapshot((doc) => {
-      if (doc.exists && doc.data().list) {
-        let rawList = doc.data().list;
-        let flatList = [];
-
-        rawList.forEach(item => {
-          if (typeof item === 'string' && item.trim().startsWith('[')) {
-            try { flatList.push(...JSON.parse(item)); return; } catch(e){}
-          }
-          if (item && typeof item.venue === 'string' && item.venue.trim().startsWith('[')) {
-            try { flatList.push(...JSON.parse(item.venue)); return; } catch(e){}
-          }
-          if (item && typeof item.title === 'string' && item.title.trim().startsWith('[')) {
-            try { flatList.push(...JSON.parse(item.title)); return; } catch(e){}
-          }
-          flatList.push(item);
-        });
-
-        events = flatList;
-        render();
+    function parseDateStr(str) {
+      if (!str) return { month: '10月', day: '18' };
+      const mMatch = str.match(/(\d{1,2})[月\/](\d{1,2})/);
+      if (mMatch) {
+        return { month: mMatch[1] + '月', day: mMatch[2] };
       }
-    });
+      return { month: '日程', day: str };
+    }
 
-    function saveToCloud() {
-      docRef.set({ list: events }).then(() => {
-        alert("クラウドに保存しました！");
-      }).catch((err) => {
-        alert("保存エラー: " + err.message);
+    function getDateSortValue(ev) {
+      const m = parseInt(ev.month, 10) || 0;
+      const d = parseInt(ev.day, 10) || 0;
+      return m * 100 + d;
+    }
+
+    function isPastEvent(ev) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const m = parseInt(ev.month, 10);
+      const d = parseInt(ev.day, 10);
+
+      if (!m || !d) return false;
+
+      const evDate = new Date(currentYear, m - 1, d, 23, 59, 59);
+      if (now.getMonth() === 11 && m === 1) {
+        evDate.setFullYear(currentYear + 1);
+      }
+
+      return evDate < now;
+    }
+
+    function setFilter(filterType, el) {
+      currentFilter = filterType;
+      document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function handleInput() {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) return;
+
+      if (text.startsWith('[') && text.endsWith(']')) {
+        try {
+          events = JSON.parse(text);
+          saveData();
+          showMsg('📋 バックアップ用データを復元しました！');
+          document.getElementById('inputText').value = '';
+          return;
+        } catch (e) {}
+      }
+
+      const isApplied = /(応募|申し込んだ|申込|エントリー|申し込む)/.test(text);
+      const isWon = /(当選|当たった|チケット取れた|参戦確定|ご用意された)/.test(text);
+      const isLost = /(落選|外れた|全滅|ダメだった|ご用意されなかった)/.test(text);
+      const isClosed = /(抽選終了|受付終了|見送り|締め切り)/.test(text);
+
+      const dateMatch = text.match(/(\d{1,2})月(\d{1,2})日/) || text.match(/(\d{1,2})\/(\d{1,2})/);
+
+      if ((isApplied || isWon || isLost || isClosed) && dateMatch) {
+        const targetMonth = dateMatch[1] + "月";
+        const targetDay = dateMatch[2];
+
+        const targetEvent = events.find(e => e.month === targetMonth && e.day === targetDay);
+
+        if (targetEvent) {
+          if (isWon) targetEvent.status = '当選';
+          else if (isLost) targetEvent.status = '落選';
+          else if (isApplied) targetEvent.status = '応募済み';
+          else if (isClosed) targetEvent.status = '抽選終了';
+
+          saveData();
+          document.getElementById('inputText').value = '';
+          showMsg(`🎉 ${targetMonth}${targetDay}日の公演を「${targetEvent.status}」に更新しました！`);
+          return;
+        }
+      }
+
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      let currentTour = "指定なし・単独イベント";
+      let currentGroup = "OCHA NORMA";
+      let addedCount = 0;
+
+      lines.forEach(line => {
+        if (line.includes("公演日") && line.includes("会場")) return;
+
+        if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
+        else if (line.includes("モーニング娘。")) currentGroup = "モーニング娘。";
+        else if (line.includes("アンジュルム")) currentGroup = "アンジュルム";
+        else if (line.includes("Juice=Juice")) currentGroup = "Juice=Juice";
+        else if (line.includes("つばきファクトリー")) currentGroup = "つばきファクトリー";
+        else if (line.includes("BEYOOOOONDS")) currentGroup = "BEYOOOOONDS";
+        else if (line.includes("ロージークロニクル")) currentGroup = "ロージークロニクル";
+
+        if ((line.includes("公演名") || line.includes("出演") || line.includes("TOUR") || line.includes("ツアー") || line.includes("『")) && !line.match(/\d{1,2}月\d{1,2}日/)) {
+          currentTour = line.replace(/^公演名[\s\t]*/, '').trim();
+          return;
+        }
+
+        const dMatch = line.match(/(\d{1,2})月(\d{1,2})日/) || line.match(/(\d{1,2})\/(\d{1,2})/);
+        const timeMatches = line.match(/(\d{1,2}:\d{2})/g);
+
+        if (dMatch) {
+          let openTime = '--:--';
+          let startTime = '--:--';
+
+          if (timeMatches) {
+            if (timeMatches.length >= 2) {
+              openTime = timeMatches[0];
+              startTime = timeMatches[1];
+            } else if (timeMatches.length === 1) {
+              startTime = timeMatches[0];
+            }
+          }
+
+          let venue = '会場未定';
+          const venueRegex = /(?:都道府県|大阪府|東京都|愛知県|埼玉県|神奈川県|千葉県|北海道|福岡県|宮城県|\([日月火水木金土]\))\s+([\s\S]+?)\s+\d{1,2}:\d{2}/;
+          const match = line.match(venueRegex);
+
+          if (match && match[1]) {
+            venue = match[1].trim();
+          } else {
+            const cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
+                                  .replace(/\d{1,2}:\d{2}/g, '')
+                                  .replace(/(都道府県|大阪府|東京都|愛知県|埼玉県|千葉県|北海道|福岡県|宮城県)/g, '')
+                                  .trim();
+            if (cleanLine) {
+              venue = cleanLine;
+            }
+          }
+
+          events.push({
+            id: Date.now() + Math.random(),
+            tour: currentTour,
+            group: currentGroup,
+            month: dMatch[1] + "月",
+            day: dMatch[2],
+            openTime: openTime,
+            startTime: startTime,
+            venue: venue,
+            status: '未応募'
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount > 0) {
+        saveData();
+        document.getElementById('inputText').value = '';
+        showMsg('🎉 スケジュールを追加しました！');
+      } else {
+        showMsg('⚠️ 処理できる日付データまたは対象の公演が見つかりませんでした。');
+      }
+    }
+
+    function addManualEvent() {
+      const tour = document.getElementById('mTour').value.trim() || '単独イベント・その他';
+      const group = document.getElementById('mGroup').value;
+      const dateStr = document.getElementById('mDate').value.trim();
+      const venue = document.getElementById('mVenue').value.trim() || '会場未定';
+      const open = document.getElementById('mOpen').value.trim() || '--:--';
+      const start = document.getElementById('mStart').value.trim() || '--:--';
+
+      const dObj = parseDateStr(dateStr);
+
+      events.push({
+        id: Date.now() + Math.random(),
+        tour: tour,
+        group: group,
+        month: dObj.month,
+        day: dObj.day,
+        openTime: open,
+        startTime: start,
+        venue: venue,
+        status: '未応募'
+      });
+
+      saveData();
+      toggleManualForm();
+      showMsg('➕ 手動で公演を追加しました！');
+    }
+
+    function exportData() {
+      const dataStr = JSON.stringify(events);
+      navigator.clipboard.writeText(dataStr).then(() => {
+        showMsg('📋 バックアップ用データをコピーしました！');
+      });
+    }
+
+    function resetData() {
+      if (confirm('すべてのデータを消去して初期化しますか？')) {
+        events = [];
+        saveData();
+        showMsg('データを初期化しました。');
+      }
+    }
+
+    function toggleStatus(id) {
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+      if (ev.status === '未応募') ev.status = '応募済み';
+      else if (ev.status === '応募済み') ev.status = '当選';
+      else if (ev.status === '当選') ev.status = '落選';
+      else if (ev.status === '落選') ev.status = '抽選終了';
+      else ev.status = '未応募';
+      saveData();
+    }
+
+    function deleteEvent(id) {
+      events = events.filter(e => e.id !== id);
+      saveData();
+    }
+
+    function switchTab(tab, el) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function getFilteredEvents() {
+      let result = [...events];
+
+      if (currentFilter === 'upcoming') {
+        result = result.filter(e => !isPastEvent(e) && e.status !== '落選' && e.status !== '抽選終了');
+      } else if (currentFilter === 'archive') {
+        result = result.filter(e => isPastEvent(e) || e.status === '落選' || e.status === '抽選終了');
+      }
+
+      return result.sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
+    }
+
+    function renderGroupedList(listEl, displayEvents) {
+      const groups = [...new Set(displayEvents.map(e => e.group))];
+      groups.forEach(g => {
+        const header = document.createElement('div');
+        header.className = 'group-header';
+        header.innerText = `🎤 ${g}`;
+        listEl.appendChild(header);
+
+        const groupEvs = displayEvents.filter(e => e.group === g);
+        const tours = [...new Set(groupEvs.map(e => e.tour || 'ツアー指定なし'))];
+
+        tours.forEach(t => {
+          if (t && t !== '指定なし・単独イベント') {
+            const subHeader = document.createElement('div');
+            subHeader.className = 'tour-sub-header';
+            subHeader.innerText = `📢 ${t}`;
+            listEl.appendChild(subHeader);
+          }
+
+          const sortedInTour = groupEvs.filter(e => (e.tour || 'ツアー指定なし') === t)
+                                        .sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
+
+          sortedInTour.forEach(ev => {
+            listEl.appendChild(createCard(ev));
+          });
+        });
+      });
+    }
+
+    function renderMonthlyList(listEl, displayEvents) {
+      const months = [...new Set(displayEvents.map(e => e.month))];
+      months.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+
+      months.forEach(m => {
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.innerText = `🗓️ ${m}`;
+        listEl.appendChild(header);
+
+        const monthEvs = displayEvents.filter(e => e.month === m)
+                                      .sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
+
+        monthEvs.forEach(ev => {
+          listEl.appendChild(createCard(ev, true));
+        });
       });
     }
 
     function render() {
-      const container = document.getElementById("eventList");
-      container.innerHTML = "";
+      const listEl = document.getElementById('eventList');
+      listEl.innerHTML = '';
 
-      if (!events || events.length === 0) {
-        container.innerHTML = "<div style='text-align:center;color:#999;padding:20px;'>予定がありません</div>";
-        return;
-      }
+      const filteredEvents = getFilteredEvents();
 
-      let displayList = [...events];
-
-      if (currentSort === 'schedule') {
-        displayList = displayList.filter(ev => ev.status === '当選' || ev.status === '応募済み');
-      }
-
-      if (currentFilter === 'end') {
-        displayList = displayList.filter(ev => ev.status === '落選' || ev.status === '終了' || ev.status === '参戦済み');
-      } else if (currentFilter === 'future') {
-        displayList = displayList.filter(ev => ev.status !== '落選' && ev.status !== '終了' && ev.status !== '参戦済み');
-      }
-
-      if (currentSort === 'group') {
-        let grouped = {};
-        displayList.forEach((ev) => {
-          const g = ev.group || "モーニング娘。";
-          if (!grouped[g]) grouped[g] = [];
-          grouped[g].push(ev);
-        });
-
-        for (let g in grouped) {
-          const gBanner = document.createElement("div");
-          gBanner.className = "group-banner";
-          gBanner.innerHTML = `🎤 ${g}`;
-          container.appendChild(gBanner);
-
-          let tourGrouped = {};
-          grouped[g].forEach(ev => {
-            let tourName = ev.tour || ev.title || "特別公演";
-            if (!tourGrouped[tourName]) tourGrouped[tourName] = [];
-            tourGrouped[tourName].push(ev);
-          });
-
-          for (let tourName in tourGrouped) {
-            const tBanner = document.createElement("div");
-            tBanner.className = "tour-banner";
-            tBanner.innerHTML = `📢 ${tourName}`;
-            container.appendChild(tBanner);
-
-            tourGrouped[tourName].forEach(ev => {
-              container.appendChild(createCard(ev));
-            });
-          }
-        }
+      if (currentTab === 'attending') {
+        const displayEvents = filteredEvents.filter(e => e.status === '当選');
+        renderMonthlyList(listEl, displayEvents);
+      } else if (currentTab === 'group') {
+        renderGroupedList(listEl, filteredEvents);
       } else {
-        displayList.forEach((ev) => {
-          container.appendChild(createCard(ev));
+        filteredEvents.forEach(ev => {
+          listEl.appendChild(createCard(ev, true));
         });
       }
     }
 
-    function createCard(ev) {
-      const card = document.createElement("div");
-      card.className = "card";
+    function createCard(ev, showTourTitle = false) {
+      const card = document.createElement('div');
+      const past = isPastEvent(ev);
+      card.className = `card ${past ? 'past-event' : ''}`;
 
-      let displayMonth = ev.month || "月";
-      if (displayMonth && !displayMonth.includes("月")) displayMonth += "月";
-      let displayDay = ev.day || "--";
+      let mStr = ev.month;
+      let dStr = ev.day;
+      if (!mStr || !dStr) {
+        const parsed = parseDateStr(ev.date || '');
+        mStr = parsed.month;
+        dStr = parsed.day;
+      }
 
-      const targetId = ev.id || Math.random().toString();
-      const venueName = ev.venue || '会場未定';
-      const openTime = ev.openTime || ev.open || '15:00';
-      const startTime = ev.startTime || ev.start || '15:45';
-      const currentGroup = ev.group || 'モーニング娘。';
-      const statusText = ev.status || '当選';
+      let statusClass = '';
+      let statusLabel = ev.status;
 
-      let optionsHtml = HP_GROUPS.map(g => 
-        `<option value="${g}" ${g === currentGroup ? 'selected' : ''}>${g}</option>`
-      ).join('');
+      // ステータスの表示・クラス判定を修正（抽選終了が落選に上書きされないよう修正）
+      if (ev.status === '応募済み') {
+        statusClass = 'applied';
+      } else if (ev.status === '当選') {
+        statusClass = 'won';
+      } else if (ev.status === '抽選終了') {
+        statusClass = 'closed';
+      } else if (ev.status === '落選') {
+        statusClass = 'lost';
+      } else if (past) {
+        statusClass = 'ended';
+        statusLabel = '終了';
+      }
 
       card.innerHTML = `
         <div class="date-box">
-          <span class="month">${displayMonth}</span>
-          <span class="day">${displayDay}</span>
+          <div class="date-month">${mStr}</div>
+          <div class="date-day">${dStr}</div>
         </div>
-        <div class="info-box">
-          <div class="venue">${venueName}</div>
-          <div class="time">開場:${openTime} / 開演:${startTime}</div>
-          <select class="group-select" onchange="changeGroup('${targetId}', this.value)">
-            ${optionsHtml}
+        <div class="card-info">
+          ${showTourTitle && ev.tour ? `<div style="font-size:0.75rem; color:#d81b60; font-weight:bold;">${ev.tour}</div>` : ''}
+          <div class="venue-name">${ev.venue}</div>
+          <div class="time-info">開場:${ev.openTime} / 開演:${ev.startTime}</div>
+          <select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
+            <option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
+            <option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
+            <option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
+            <option ${ev.group==='Juice=Juice'?'selected':''}>Juice=Juice</option>
+            <option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
+            <option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
+            <option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
           </select>
         </div>
-        <div class="status-pill">${statusText}</div>
-        <button class="btn-delete" onclick="deleteEvent('${targetId}')">✕</button>
+        <button class="status-badge ${statusClass}" onclick="toggleStatus(${ev.id})">${statusLabel}</button>
+        <button class="btn-delete" onclick="deleteEvent(${ev.id})">✕</button>
       `;
       return card;
     }
 
-    function changeGroup(targetId, newGroup) {
-      let item = events.find(e => String(e.id) === String(targetId));
-      if (item) {
-        item.group = newGroup;
-        saveToCloud();
+    function updateGroup(id, newGroup) {
+      const ev = events.find(e => e.id === id);
+      if (ev) {
+        ev.group = newGroup;
+        saveData();
       }
     }
 
-    function deleteEvent(targetId) {
-      if (confirm("削除しますか？")) {
-        events = events.filter(item => String(item.id) !== String(targetId));
-        render();
-        saveToCloud();
-      }
-    }
-
-    function processInput() {
-      const t = document.getElementById("inputText").value.trim();
-      if (!t) return;
-
-      try {
-        let parsed = JSON.parse(t);
-        if (Array.isArray(parsed)) {
-          events.push(...parsed);
-        } else {
-          events.push(parsed);
-        }
-      } catch(e) {
-        events.push({
-          id: Date.now().toString(),
-          group: "モーニング娘。",
-          month: "8月",
-          day: "21",
-          tour: "特別公演",
-          venue: t,
-          status: "当選"
-        });
-      }
-
-      document.getElementById("inputText").value = "";
-      render();
-      saveToCloud();
-    }
-
-    function toggleManualForm() {
-      const f = document.getElementById("manualForm");
-      f.style.display = f.style.display === "block" ? "none" : "block";
-    }
-
-    function addManualEvent() {
-      const g = document.getElementById("mGroup").value;
-      const m = document.getElementById("mMonth").value;
-      const d = document.getElementById("mDay").value;
-      const tour = document.getElementById("mTour").value;
-      const p = document.getElementById("mPlace").value;
-
-    events.push({
-        id: Date.now().toString(),
-        group: g,
-        month: m || "8月",
-        day: d || "21",
-        tour: tour || "単独公演",
-        venue: p || "会場未定",
-        status: "当選"
-      });
-
-      toggleManualForm();
-      render();
-      saveToCloud();
-    }
-
-    function resetData() {
-      if (confirm("全てのデータを初期化しますか？")) {
-        events = [];
-        render();
-        saveToCloud();
-      }
-    }
-
-    function setSort(type, el) {
-      currentSort = type;
-      if (el) {
-        document.querySelectorAll(".top-nav-btn").forEach(b => b.classList.remove("active"));
-        el.classList.add("active");
-      }
-      render();
-    }
-
-    function setFilter(type, el) {
-      currentFilter = type;
-      if (el) {
-        document.querySelectorAll(".btn-filter-pill").forEach(b => b.classList.remove("active"));
-        el.classList.add("active");
-      }
-      render();
-    }
+    render();
   </script>
 </body>
 </html>
