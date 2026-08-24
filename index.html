@@ -294,7 +294,7 @@
           <option>ロージークロニクル</option>
         </select>
         <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/18)">
-        <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名">
+        <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 ニッショーホール)">
         <input type="text" id="mOpen" class="form-control" placeholder="開場 14:15">
         <input type="text" id="mStart" class="form-control" placeholder="開演 15:00">
       </div>
@@ -438,21 +438,12 @@
             }
           }
 
-          let venue = '会場未定';
-          const venueRegex = /(?:都道府県|大阪府|東京都|愛知県|埼玉県|神奈川県|千葉県|北海道|福岡県|宮城県|\([日月火水木金土]\))\s+([\s\S]+?)\s+\d{1,2}:\d{2}/;
-          const match = line.match(venueRegex);
+          // 都道府県名を含めて会場名を抽出するように修正
+          let cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
+                              .replace(/\d{1,2}:\d{2}/g, '')
+                              .trim();
 
-          if (match && match[1]) {
-            venue = match[1].trim();
-          } else {
-            const cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
-                                  .replace(/\d{1,2}:\d{2}/g, '')
-                                  .replace(/(都道府県|大阪府|東京都|愛知県|埼玉県|千葉県|北海道|福岡県|宮城県)/g, '')
-                                  .trim();
-            if (cleanLine) {
-              venue = cleanLine;
-            }
-          }
+          let venue = cleanLine || '会場未定';
 
           events.push({
             id: Date.now() + Math.random(),
@@ -556,7 +547,6 @@
     }
 
     function renderGroupedList(listEl, displayEvents) {
-      // 各グループの「一番早い公演の日付」を求めて、それが早い順にグループを並び替える
       const groupMinDate = {};
       displayEvents.forEach(e => {
         const val = getDateSortValue(e);
