@@ -285,6 +285,7 @@
       <div class="form-grid">
         <input type="text" id="mTour" class="form-control form-full" placeholder="公演名・ツアー名（任意）">
         <select id="mGroup" class="form-control">
+          <option>ハロー！プロジェクト</option>
           <option>OCHA NORMA</option>
           <option>モーニング娘。</option>
           <option>アンジュルム</option>
@@ -294,9 +295,9 @@
           <option>ロージークロニクル</option>
         </select>
         <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/18)">
-        <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 ニッショーホール)">
-        <input type="text" id="mOpen" class="form-control" placeholder="開場 14:15">
-        <input type="text" id="mStart" class="form-control" placeholder="開演 15:00">
+        <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 日本武道館)">
+        <input type="text" id="mOpen" class="form-control" placeholder="開場 15:00">
+        <input type="text" id="mStart" class="form-control" placeholder="開演 16:00">
       </div>
       <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none;" onclick="addManualEvent()">追加する</button>
     </div>
@@ -403,13 +404,14 @@
 
       const lines = text.split('\n').map(l => l.trim()).filter(l => l);
       let currentTour = "指定なし・単独イベント";
-      let currentGroup = "OCHA NORMA";
+      let currentGroup = "ハロー！プロジェクト";
       let addedCount = 0;
 
       lines.forEach(line => {
         if (line.includes("公演日") && line.includes("会場")) return;
 
-        if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
+        if (line.includes("ハロー！プロジェクト") || line.includes("Hello! Project")) currentGroup = "ハロー！プロジェクト";
+        else if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
         else if (line.includes("モーニング娘。")) currentGroup = "モーニング娘。";
         else if (line.includes("アンジュルム")) currentGroup = "アンジュルム";
         else if (line.includes("Juice=Juice")) currentGroup = "Juice=Juice";
@@ -438,7 +440,6 @@
             }
           }
 
-          // 都道府県名を含めて会場名を抽出するように修正
           let cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
                               .replace(/\d{1,2}:\d{2}/g, '')
                               .trim();
@@ -661,6 +662,7 @@
           <div class="venue-name">${ev.venue}</div>
           <div class="time-info">開場:${ev.openTime} / 開演:${ev.startTime}</div>
           <select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
+            <option ${ev.group==='ハロー！プロジェクト'?'selected':''}>ハロー！プロジェクト</option>
             <option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
             <option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
             <option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
