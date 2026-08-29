@@ -54,19 +54,30 @@
     .input-row {
       display: flex;
       gap: 10px;
+      align-items: flex-start;
     }
-    textarea {
+    /* ▼ 上部の入力欄のスタイル改善 ▼ */
+    textarea#inputText {
       flex: 1;
-      height: 70px;
+      min-height: 70px;
       border: 1px solid #ffccd5;
       border-radius: 10px;
-      padding: 8px;
-      font-size: 0.85rem;
+      padding: 12px;
+      font-size: 0.9rem;
+      line-height: 1.6; /* 行間をあけて見やすく */
       resize: none;
       outline: none;
+      box-sizing: border-box;
+      font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    textarea#inputText:focus {
+      background: #fffcfd;
+      border-color: #ff70a6;
     }
     .btn-send {
       width: 70px;
+      height: 70px;
       background: linear-gradient(135deg, #e65cff, #e032e6);
       color: white;
       border: none;
@@ -283,25 +294,26 @@
       padding: 0 4px;
     }
 
-    /* モーダルウィンドウ */
+    /* ▼ メモ・セトリ用モーダルの大幅改良 ▼ */
     #memoModal {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       z-index: 1000;
       justify-content: center;
       align-items: center;
+      backdrop-filter: blur(2px);
     }
     .modal-content {
       background: white;
-      width: 90%;
+      width: 92%;
       max-width: 500px;
       border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      max-height: 85vh;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      max-height: 90vh;
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
@@ -309,20 +321,29 @@
     .modal-title {
       font-weight: bold;
       color: #d81b60;
-      margin-bottom: 10px;
-      font-size: 0.95rem;
+      margin-bottom: 12px;
+      font-size: 1rem;
     }
     .modal-textarea {
       width: 100%;
-      height: 280px;
-      border: 1px solid #ffccd5;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 0.9rem;
-      resize: vertical;
+      height: 55vh; /* スマホ画面の約半分以上の高さを確保 */
+      border: 1px solid #ffb3c1;
+      background: #fff5f7; /* ノートのような淡いピンク背景 */
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 0.95rem;
+      line-height: 1.8; /* 👈 ここがポイント！行間を広げて圧倒的に読みやすく */
+      letter-spacing: 0.02em;
+      resize: none;
       box-sizing: border-box;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       outline: none;
+      font-family: inherit;
+      transition: background 0.3s, border 0.3s;
+    }
+    .modal-textarea:focus {
+      background: #ffffff; /* タップして入力中は背景を白に */
+      border: 2px solid #ff70a6;
     }
     .modal-btns {
       display: flex;
@@ -333,7 +354,7 @@
       background: #e2e8f0;
       color: #475569;
       border: none;
-      padding: 8px 16px;
+      padding: 10px 20px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -342,7 +363,7 @@
       background: linear-gradient(135deg, #e65cff, #e032e6);
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 10px 24px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -360,7 +381,8 @@
   <div class="input-card">
     <div class="input-title">💭 セトリやメモの追加・スケジュール一括入力</div>
     <div class="input-row">
-      <textarea id="inputText" placeholder="例: 公式の告知文をそのまま貼り付けOK"></textarea>
+      <!-- oninputを追加して、長文ペースト時に自動で縦に伸びるようにしました -->
+      <textarea id="inputText" placeholder="例: 公式の告知文をそのまま貼り付けOK" oninput="autoResize(this)"></textarea>
       <button class="btn-send" onclick="handleInput()">送信</button>
     </div>
 
@@ -410,7 +432,7 @@
   <div id="memoModal">
     <div class="modal-content">
       <div class="modal-title" id="memoModalTitle">📝 セトリ・メモの編集</div>
-      <textarea id="memoModalText" class="modal-textarea" placeholder="ここにセトリや感想を大量に書き込めます..."></textarea>
+      <textarea id="memoModalText" class="modal-textarea" placeholder="ここにセトリや感想を書き込めます..."></textarea>
       <div class="modal-btns">
         <button class="modal-btn-cancel" onclick="closeMemoModal()">キャンセル</button>
         <button class="modal-btn-save" onclick="saveMemoModal()">保存する</button>
@@ -425,6 +447,14 @@
     let currentTab = 'all';
     let currentFilter = 'upcoming';
     let editingEventId = null;
+
+    // ▼ 入力エリアの自動リサイズ用関数 ▼
+    function autoResize(el) {
+      el.style.height = 'auto'; // 高さをリセットして計算し直す
+      let newHeight = el.scrollHeight;
+      if (newHeight > 250) newHeight = 250; // 最大でも250pxまでしか伸びないようにする
+      el.style.height = newHeight + 'px';
+    }
 
     function cleanVenueAndTour(rawTitle, rawVenue) {
       let tour = rawTitle || 'ツアー指定なし';
@@ -619,7 +649,8 @@
     }
 
     function handleInput() {
-      const text = document.getElementById('inputText').value.trim();
+      const textEl = document.getElementById('inputText');
+      const text = textEl.value.trim();
       if (!text) return;
 
       if (text.startsWith('[') && text.endsWith(']')) {
@@ -627,7 +658,8 @@
           events = JSON.parse(text);
           saveData();
           showMsg('📋 バックアップ用データを復元しました！');
-          document.getElementById('inputText').value = '';
+          textEl.value = '';
+          textEl.style.height = '70px'; // 高さをリセット
           return;
         } catch (e) {}
       }
@@ -711,7 +743,8 @@
         }
 
         saveData();
-        document.getElementById('inputText').value = '';
+        textEl.value = '';
+        textEl.style.height = '70px'; // 高さをリセット
         showMsg('✨ 公式告知のスケジュールを反映しました！');
         return;
       }
@@ -736,13 +769,14 @@
           else if (isClosed) { targetEvent.status = '抽選終了'; updated = true; }
 
           if ((!isApplied && !isWon && !isLost && !isClosed) || text.includes('セトリ') || text.includes('メモ') || text.includes('￥') || text.includes('円') || text.includes('レポ')) {
-            targetEvent.memo = (targetEvent.memo ? targetEvent.memo + '\n' : '') + text;
+            targetEvent.memo = (targetEvent.memo ? targetEvent.memo + '\n\n' : '') + text;
             updated = true;
           }
 
           if (updated) {
             saveData();
-            document.getElementById('inputText').value = '';
+            textEl.value = '';
+            textEl.style.height = '70px'; // 高さをリセット
             showMsg(`🎉 ${targetMonth}${targetDay}日の情報を更新しました！`);
             return;
           }
@@ -814,7 +848,8 @@
 
       if (addedCount > 0) {
         saveData();
-        document.getElementById('inputText').value = '';
+        textEl.value = '';
+        textEl.style.height = '70px'; // 高さをリセット
         showMsg('🎉 スケジュールを追加しました！');
       } else {
         showMsg('⚠️ 日付が見つかりませんでした。');
@@ -897,7 +932,7 @@
       const ev = events.find(e => e.id === id);
       if (!ev) return;
 
-      document.getElementById('memoModalTitle').innerText = `📝 ${ev.month}${ev.day} ${ev.venue} のセトリ・メモ`;
+      document.getElementById('memoModalTitle').innerText = `📝 ${ev.month}${ev.day} ${ev.venue}`;
       document.getElementById('memoModalText').value = ev.memo || '';
       document.getElementById('memoModal').style.display = 'flex';
     }
