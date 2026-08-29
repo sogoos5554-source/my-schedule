@@ -88,6 +88,7 @@
       display: flex;
       gap: 8px;
       margin-bottom: 12px;
+      flex-wrap: wrap;
     }
     .btn-sub {
       background: #ffffff;
@@ -191,7 +192,7 @@
       border: 1px solid #fff0f5;
     }
     .card.past-event {
-      opacity: 0.6;
+      opacity: 0.65;
       background: #f8fafc;
     }
 
@@ -211,17 +212,48 @@
     .date-day { font-size: 1.1rem; font-weight: 800; color: #1a202c; line-height: 1; }
 
     .card-info { flex: 1; min-width: 0; }
+    .tour-title { font-size: 0.75rem; color: #d81b60; font-weight: bold; margin-bottom: 2px; }
     .venue-name { font-size: 0.9rem; font-weight: bold; color: #2d3748; white-space: normal; word-break: break-all; }
     .time-info { font-size: 0.75rem; color: #718096; margin-top: 2px; }
-    .group-select {
+    
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .group-select {
       border: 1px solid #ffccd5;
       border-radius: 6px;
       color: #d81b60;
       font-size: 0.75rem;
       font-weight: bold;
-      padding: 1px 4px;
+      padding: 2px 6px;
       background: #fff5f7;
+    }
+
+    .schedule-info { 
+      font-size: 0.7rem; 
+      color: #d81b60; 
+      font-weight: bold;
+    }
+
+    .btn-memo-edit {
+      background: #fff5f7;
+      border: 1px solid #ffccd5;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #d81b60;
+      cursor: pointer;
+    }
+    .btn-memo-edit.has-memo {
+      background: #ff70a6;
+      color: white;
+      border-color: #ff70a6;
     }
 
     .status-badge {
@@ -241,7 +273,7 @@
     .status-badge.lost { background: #fee2e2; color: #b91c1c; }
     .status-badge.closed { background: #f3e8ff; color: #7e22ce; }
     .status-badge.ended { background: #e2e8f0; color: #475569; }
-    
+
     .btn-delete {
       color: #ff8fa3;
       background: none;
@@ -250,26 +282,92 @@
       cursor: pointer;
       padding: 0 4px;
     }
+
+    /* モーダルウィンドウ */
+    #memoModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+    .modal-title {
+      font-weight: bold;
+      color: #d81b60;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+    .modal-textarea {
+      width: 100%;
+      height: 280px;
+      border: 1px solid #ffccd5;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.9rem;
+      resize: vertical;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .modal-btn-cancel {
+      background: #e2e8f0;
+      color: #475569;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .modal-btn-save {
+      background: linear-gradient(135deg, #e65cff, #e032e6);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <div class="tabs">
-    <div class="tab" onclick="switchTab('all', this)">📅 日程順</div>
-    <div class="tab active" onclick="switchTab('group', this)">🎤 グループ別</div>
+    <div class="tab active" onclick="switchTab('all', this)">📅 日程順</div>
+    <div class="tab" onclick="switchTab('group', this)">🎤 グループ別</div>
     <div class="tab" onclick="switchTab('attending', this)">🎟 参戦予定</div>
   </div>
 
   <div class="input-card">
-    <div class="input-title">💭 スケジュール一括貼り付け・指示入力</div>
+    <div class="input-title">💭 セトリやメモの追加・スケジュール一括入力</div>
     <div class="input-row">
-      <textarea id="inputText" placeholder="スケジュール貼り付け / 例: 「10/18 申し込んだ！」"></textarea>
+      <textarea id="inputText" placeholder="例: 公式の告知文をそのまま貼り付けOK"></textarea>
       <button class="btn-send" onclick="handleInput()">送信</button>
     </div>
-    
+
     <div id="msgArea" class="msg-area"></div>
 
     <div class="action-btns">
+      <button class="btn-sub" onclick="fetchFromGAS()">☁️ シートから同期</button>
       <button class="btn-sub" onclick="toggleManualForm()">＋ 手動追加</button>
       <button class="btn-sub" onclick="exportData()">📱 バックアップ出力</button>
       <button class="btn-sub" onclick="resetData()">初期化</button>
@@ -294,10 +392,13 @@
           <option>BEYOOOOONDS</option>
           <option>ロージークロニクル</option>
         </select>
-        <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/18)">
+        <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/23)">
         <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 日本武道館)">
-        <input type="text" id="mOpen" class="form-control" placeholder="開場 15:00">
-        <input type="text" id="mStart" class="form-control" placeholder="開演 16:00">
+        <input type="text" id="mOpen" class="form-control" placeholder="開場 (例: 17:00)">
+        <input type="text" id="mStart" class="form-control" placeholder="開演 (例: 18:00)">
+        <input type="text" id="mPrice" class="form-control" placeholder="チケット代 (例: 9000)">
+        <input type="text" id="mApplyEnd" class="form-control" placeholder="受付締切 (例: 9/7 17:00)">
+        <input type="text" id="mAnnounce" class="form-control form-full" placeholder="当落発表 (例: 9/11 15:00)">
       </div>
       <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none;" onclick="addManualEvent()">追加する</button>
     </div>
@@ -305,10 +406,90 @@
 
   <div id="eventList"></div>
 
+  <!-- セトリ・メモ編集用モーダル -->
+  <div id="memoModal">
+    <div class="modal-content">
+      <div class="modal-title" id="memoModalTitle">📝 セトリ・メモの編集</div>
+      <textarea id="memoModalText" class="modal-textarea" placeholder="ここにセトリや感想を大量に書き込めます..."></textarea>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="closeMemoModal()">キャンセル</button>
+        <button class="modal-btn-save" onclick="saveMemoModal()">保存する</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK5LvyKxjFkCrz6PKujV_SV8fgfmjCPAizugpxOdZW8flyusKQJGWtpueXl6GsHCzY/exec';
+
     let events = JSON.parse(localStorage.getItem('hp_events') || '[]');
-    let currentTab = 'group';
+    let currentTab = 'all';
     let currentFilter = 'upcoming';
+    let editingEventId = null;
+
+    function cleanVenueAndTour(rawTitle, rawVenue) {
+      let tour = rawTitle || 'ツアー指定なし';
+      let venue = rawVenue || '会場未定';
+
+      if (venue.includes(' - ')) {
+        const parts = venue.split(' - ');
+        venue = parts[parts.length - 1];
+      }
+
+      if (!/^(東京都|北海道|(京都|大阪)府|.{2,3}県)/.test(venue)) {
+        if (venue.includes('日本武道館')) venue = '東京都 ' + venue;
+        else if (venue.includes('ぴあアリーナ')) venue = '神奈川県 ' + venue;
+        else if (venue.includes('PORTBASE')) venue = '愛知県 ' + venue;
+        else if (venue.includes('リリア')) venue = '埼玉県 ' + venue;
+        else if (venue.includes('立川ステージガーデン')) venue = '東京都 ' + venue;
+        else if (venue.includes('ハーモニーホール座間')) venue = '神奈川県 ' + venue;
+        else if (venue.includes('NHKホール')) venue = '東京都 ' + venue;
+        else if (venue.includes('横浜アリーナ')) venue = '神奈川県 ' + venue;
+        else if (venue.includes('COOL JAPAN PARK')) venue = '大阪府 ' + venue;
+        else if (venue.includes('オリックス劇場')) venue = '大阪府 ' + venue;
+      }
+
+      return { tour, venue };
+    }
+
+    function formatTime(val) {
+      if (!val) return '';
+      const str = String(val);
+
+      if (str.includes('T') || str.includes('1899-')) {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          let h = d.getUTCHours() + 9;
+          const m = d.getUTCMinutes();
+          if (h >= 24) h -= 24;
+          return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+      }
+
+      const match = str.match(/(\d{1,2}):(\d{2})/);
+      if (match) {
+        return `${String(match[1]).padStart(2,'0')}:${match[2]}`;
+      }
+      return str;
+    }
+
+    function formatSchedule(val) {
+      if (!val) return '';
+      const str = String(val);
+
+      if (str.includes('T') || str.includes('1899-')) {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          let h = d.getUTCHours() + 9;
+          const m = d.getUTCMinutes();
+          if (h >= 24) h -= 24;
+          if (h === 0 && m === 0 && str.includes('00:00:00')) {
+            return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+          }
+          return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+      }
+      return str;
+    }
 
     function saveData() {
       localStorage.setItem('hp_events', JSON.stringify(events));
@@ -319,13 +500,88 @@
       document.getElementById('msgArea').innerText = text;
     }
 
+    function parseStatus(rawStatus) {
+      if (!rawStatus) return '未応募';
+      const validStatuses = ['未応募', '応募済み', '当落待ち', '当選', '落選', '抽選終了'];
+      if (validStatuses.includes(rawStatus)) {
+        return rawStatus;
+      }
+      return '未応募';
+    }
+
+    function fetchFromGAS() {
+      showMsg('☁️ スプレッドシートから最新データを取得中...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      fetch(GAS_URL, { signal: controller.signal })
+        .then(res => res.json())
+        .then(data => {
+          clearTimeout(timeoutId);
+          if (!data || data.length === 0) {
+            showMsg('⚠️ シートにデータがありませんでした。');
+            render();
+            return;
+          }
+
+          data.forEach(item => {
+            if (!item.month || !item.day) return;
+
+            let mStr = String(item.month).includes('月') ? item.month : item.month + '月';
+            let dStr = String(item.day).replace('日', '');
+
+            const cleaned = cleanVenueAndTour(item.title, item.venue);
+
+            let existing = events.find(e => e.month === mStr && e.day === dStr && (e.venue.includes(cleaned.venue) || cleaned.venue.includes(e.venue)));
+
+            if (existing) {
+              existing.tour = existing.tour && existing.tour !== 'ツアー指定なし' ? existing.tour : cleaned.tour;
+              existing.openTime = formatTime(item.openTime) || existing.openTime;
+              existing.startTime = formatTime(item.startTime) || existing.startTime;
+              existing.price = item.price !== undefined && item.price !== null && String(item.price).trim() !== '' ? String(item.price).trim() : existing.price;
+              if (item.applyEnd) existing.applyEnd = formatSchedule(item.applyEnd);
+              if (item.announce) existing.announce = formatSchedule(item.announce);
+              if (item.group && item.group !== 'ハロー！プロジェクト') {
+                existing.group = item.group;
+              }
+            } else {
+              events.push({
+                id: Date.now() + Math.random(),
+                tour: cleaned.tour,
+                group: item.group || 'ハロー！プロジェクト',
+                month: mStr,
+                day: dStr,
+                openTime: formatTime(item.openTime) || '--:--',
+                startTime: formatTime(item.startTime) || '--:--',
+                venue: cleaned.venue,
+                status: parseStatus(item.status),
+                applyEnd: formatSchedule(item.applyEnd) || '9/7 17:00',
+                announce: formatSchedule(item.announce) || '9/11 15:00',
+                price: item.price !== undefined && item.price !== null ? String(item.price).trim() : '',
+                memo: ''
+              });
+            }
+          });
+
+          saveData();
+          showMsg('✨ スプレッドシートから同期しました！');
+        })
+        .catch(err => {
+          clearTimeout(timeoutId);
+          console.warn('GAS Fetch Warning:', err);
+          showMsg('⚠️ 通信エラー。保存済みのローカルデータを表示します。');
+          render();
+        });
+    }
+
     function toggleManualForm() {
       const form = document.getElementById('manualForm');
       form.style.display = form.style.display === 'block' ? 'none' : 'block';
     }
 
     function parseDateStr(str) {
-      if (!str) return { month: '10月', day: '18' };
+      if (!str) return { month: '10月', day: '23' };
       const mMatch = str.match(/(\d{1,2})[月\/](\d{1,2})/);
       if (mMatch) {
         return { month: mMatch[1] + '月', day: mMatch[2] };
@@ -376,6 +632,90 @@
         } catch (e) {}
       }
 
+      if (text.includes("申込期間") || text.includes("日本武道館公演") || text.includes("ぴあアリーナMM公演")) {
+        let applyEndStr = "9/7 17:00";
+        let announceStr = "9/11 15:00";
+
+        const applyMatch = text.match(/申込期間[:：].*?～.*?(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
+        if (applyMatch) {
+          applyEndStr = `${applyMatch[1]}/${applyMatch[2]} ${applyMatch[3]}:00`;
+        }
+
+        const announceMatch = text.match(/当選[・及]落選確認期間[:：]\s*(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
+        if (announceMatch) {
+          announceStr = `${announceMatch[1]}/${announceMatch[2]} ${announceMatch[3]}:00`;
+        }
+
+        let currentGroup = "Juice=Juice";
+
+        const budokanMatch = text.match(/日本武道館公演[:：]\s*.*?(\d{1,2})月(\d{1,2})日/);
+        const bMonth = budokanMatch ? budokanMatch[1] + "月" : "10月";
+        const bDay = budokanMatch ? budokanMatch[2] : "23";
+        const venueB = "東京都 日本武道館";
+        const tourB = "Juice=Juice Room Tour 2026 「5ROOMS -SUITE-」";
+
+        let existingB = events.find(e => e.venue.includes("日本武道館"));
+        if (existingB) {
+          existingB.month = bMonth;
+          existingB.day = bDay;
+          existingB.applyEnd = applyEndStr;
+          existingB.announce = announceStr;
+          existingB.tour = tourB;
+        } else {
+          events.push({
+            id: Date.now() + Math.random(),
+            tour: tourB,
+            group: currentGroup,
+            month: bMonth,
+            day: bDay,
+            openTime: "17:00",
+            startTime: "18:00",
+            venue: venueB,
+            status: '未応募',
+            applyEnd: applyEndStr,
+            announce: announceStr,
+            price: "9000",
+            memo: ''
+          });
+        }
+
+        const piaMatch = text.match(/ぴあアリーナMM公演[:：]\s*.*?(\d{1,2})月(\d{1,2})日/);
+        const pMonth = piaMatch ? piaMatch[1] + "月" : "11月";
+        const pDay = piaMatch ? piaMatch[2] : "12";
+        const venueP = "神奈川県 ぴあアリーナMM";
+        const tourP = "Juice=Juice Room Tour 2026 「5ROOMS -ROYAL SUITE-」";
+
+        let existingP = events.find(e => e.venue.includes("ぴあアリーナMM"));
+        if (existingP) {
+          existingP.month = pMonth;
+          existingP.day = pDay;
+          existingP.applyEnd = applyEndStr;
+          existingP.announce = announceStr;
+          existingP.tour = tourP;
+        } else {
+          events.push({
+            id: Date.now() + Math.random(),
+            tour: tourP,
+            group: currentGroup,
+            month: pMonth,
+            day: pDay,
+            openTime: "17:00",
+            startTime: "18:00",
+            venue: venueP,
+            status: '未応募',
+            applyEnd: applyEndStr,
+            announce: announceStr,
+            price: "9000",
+            memo: ''
+          });
+        }
+
+        saveData();
+        document.getElementById('inputText').value = '';
+        showMsg('✨ 公式告知のスケジュールを反映しました！');
+        return;
+      }
+
       const isApplied = /(応募|申し込んだ|申込|エントリー|申し込む)/.test(text);
       const isWon = /(当選|当たった|チケット取れた|参戦確定|ご用意された)/.test(text);
       const isLost = /(落選|外れた|全滅|ダメだった|ご用意されなかった)/.test(text);
@@ -383,22 +723,29 @@
 
       const dateMatch = text.match(/(\d{1,2})月(\d{1,2})日/) || text.match(/(\d{1,2})\/(\d{1,2})/);
 
-      if ((isApplied || isWon || isLost || isClosed) && dateMatch) {
+      if (dateMatch) {
         const targetMonth = dateMatch[1] + "月";
         const targetDay = dateMatch[2];
-
         const targetEvent = events.find(e => e.month === targetMonth && e.day === targetDay);
 
         if (targetEvent) {
-          if (isWon) targetEvent.status = '当選';
-          else if (isLost) targetEvent.status = '落選';
-          else if (isApplied) targetEvent.status = '応募済み';
-          else if (isClosed) targetEvent.status = '抽選終了';
+          let updated = false;
+          if (isWon) { targetEvent.status = '当選'; updated = true; }
+          else if (isLost) { targetEvent.status = '落選'; updated = true; }
+          else if (isApplied) { targetEvent.status = '応募済み'; updated = true; }
+          else if (isClosed) { targetEvent.status = '抽選終了'; updated = true; }
 
-          saveData();
-          document.getElementById('inputText').value = '';
-          showMsg(`🎉 ${targetMonth}${targetDay}日の公演を「${targetEvent.status}」に更新しました！`);
-          return;
+          if ((!isApplied && !isWon && !isLost && !isClosed) || text.includes('セトリ') || text.includes('メモ') || text.includes('￥') || text.includes('円') || text.includes('レポ')) {
+            targetEvent.memo = (targetEvent.memo ? targetEvent.memo + '\n' : '') + text;
+            updated = true;
+          }
+
+          if (updated) {
+            saveData();
+            document.getElementById('inputText').value = '';
+            showMsg(`🎉 ${targetMonth}${targetDay}日の情報を更新しました！`);
+            return;
+          }
         }
       }
 
@@ -444,18 +791,22 @@
                               .replace(/\d{1,2}:\d{2}/g, '')
                               .trim();
 
-          let venue = cleanLine || '会場未定';
+          const cleaned = cleanVenueAndTour(currentTour, cleanLine);
 
           events.push({
             id: Date.now() + Math.random(),
-            tour: currentTour,
+            tour: cleaned.tour,
             group: currentGroup,
             month: dMatch[1] + "月",
             day: dMatch[2],
             openTime: openTime,
             startTime: startTime,
-            venue: venue,
-            status: '未応募'
+            venue: cleaned.venue,
+            status: '未応募',
+            applyEnd: '9/7 17:00',
+            announce: '9/11 15:00',
+            price: '9000',
+            memo: ''
           });
           addedCount++;
         }
@@ -466,7 +817,7 @@
         document.getElementById('inputText').value = '';
         showMsg('🎉 スケジュールを追加しました！');
       } else {
-        showMsg('⚠️ 処理できる日付データまたは対象の公演が見つかりませんでした。');
+        showMsg('⚠️ 日付が見つかりませんでした。');
       }
     }
 
@@ -474,26 +825,44 @@
       const tour = document.getElementById('mTour').value.trim() || '単独イベント・その他';
       const group = document.getElementById('mGroup').value;
       const dateStr = document.getElementById('mDate').value.trim();
-      const venue = document.getElementById('mVenue').value.trim() || '会場未定';
+      const rawVenue = document.getElementById('mVenue').value.trim();
       const open = document.getElementById('mOpen').value.trim() || '--:--';
       const start = document.getElementById('mStart').value.trim() || '--:--';
+      const price = document.getElementById('mPrice').value.trim();
+      const applyEnd = document.getElementById('mApplyEnd').value.trim() || '9/7 17:00';
+      const announce = document.getElementById('mAnnounce').value.trim() || '9/11 15:00';
 
       const dObj = parseDateStr(dateStr);
+      const cleaned = cleanVenueAndTour(tour, rawVenue);
 
       events.push({
         id: Date.now() + Math.random(),
-        tour: tour,
+        tour: cleaned.tour,
         group: group,
         month: dObj.month,
         day: dObj.day,
         openTime: open,
         startTime: start,
-        venue: venue,
-        status: '未応募'
+        venue: cleaned.venue,
+        status: '未応募',
+        price: price,
+        applyEnd: applyEnd,
+        announce: announce,
+        memo: ''
       });
 
       saveData();
       toggleManualForm();
+      
+      document.getElementById('mTour').value = '';
+      document.getElementById('mDate').value = '';
+      document.getElementById('mVenue').value = '';
+      document.getElementById('mOpen').value = '';
+      document.getElementById('mStart').value = '';
+      document.getElementById('mPrice').value = '';
+      document.getElementById('mApplyEnd').value = '';
+      document.getElementById('mAnnounce').value = '';
+
       showMsg('➕ 手動で公演を追加しました！');
     }
 
@@ -516,11 +885,37 @@
       const ev = events.find(e => e.id === id);
       if (!ev) return;
       if (ev.status === '未応募') ev.status = '応募済み';
-      else if (ev.status === '応募済み') ev.status = '当選';
+      else if (ev.status === '応募済み' || ev.status === '当落待ち') ev.status = '当選';
       else if (ev.status === '当選') ev.status = '落選';
       else if (ev.status === '落選') ev.status = '抽選終了';
       else ev.status = '未応募';
       saveData();
+    }
+
+    function openMemoModal(id) {
+      editingEventId = id;
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+
+      document.getElementById('memoModalTitle').innerText = `📝 ${ev.month}${ev.day} ${ev.venue} のセトリ・メモ`;
+      document.getElementById('memoModalText').value = ev.memo || '';
+      document.getElementById('memoModal').style.display = 'flex';
+    }
+
+    function closeMemoModal() {
+      document.getElementById('memoModal').style.display = 'none';
+      editingEventId = null;
+    }
+
+    function saveMemoModal() {
+      if (editingEventId === null) return;
+      const ev = events.find(e => e.id === editingEventId);
+      if (ev) {
+        ev.memo = document.getElementById('memoModalText').value.trim();
+        saveData();
+        showMsg('📝 セトリ・メモを保存しました！');
+      }
+      closeMemoModal();
     }
 
     function deleteEvent(id) {
@@ -580,7 +975,7 @@
                                         .sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
 
           sortedInTour.forEach(ev => {
-            listEl.appendChild(createCard(ev));
+            listEl.appendChild(createCard(ev, false));
           });
         });
       });
@@ -612,7 +1007,7 @@
       const filteredEvents = getFilteredEvents();
 
       if (currentTab === 'attending') {
-        const displayEvents = filteredEvents.filter(e => e.status === '当選');
+        const displayEvents = filteredEvents.filter(e => e.status === '当選' || isPastEvent(e));
         renderMonthlyList(listEl, displayEvents);
       } else if (currentTab === 'group') {
         renderGroupedList(listEl, filteredEvents);
@@ -630,26 +1025,44 @@
 
       let mStr = ev.month;
       let dStr = ev.day;
-      if (!mStr || !dStr) {
-        const parsed = parseDateStr(ev.date || '');
-        mStr = parsed.month;
-        dStr = parsed.day;
-      }
 
       let statusClass = '';
-      let statusLabel = ev.status;
+      let statusLabel = parseStatus(ev.status);
 
-      if (ev.status === '応募済み') {
+      if (statusLabel === '応募済み' || statusLabel === '当落待ち') {
         statusClass = 'applied';
-      } else if (ev.status === '当選') {
+      } else if (statusLabel === '当選') {
         statusClass = 'won';
-      } else if (ev.status === '抽選終了') {
+      } else if (statusLabel === '抽選終了') {
         statusClass = 'closed';
-      } else if (ev.status === '落選') {
+      } else if (statusLabel === '落選') {
         statusClass = 'lost';
       } else if (past) {
         statusClass = 'ended';
         statusLabel = '終了';
+      }
+
+      let subText = '';
+      
+      // 当選の場合は、締切・当落・チケット代もすべて非表示にする
+      if (statusLabel !== '当選') {
+        if (ev.applyEnd) subText += `締切: ${ev.applyEnd}`;
+        if (ev.announce) {
+          if (subText) subText += ' / ';
+          subText += `当落: ${ev.announce}`;
+        }
+        if (ev.price !== undefined && ev.price !== null && String(ev.price).trim() !== '') {
+          const pStr = String(ev.price).trim();
+          const priceVal = isNaN(pStr.replace(/[￥,]/g, '')) ? pStr : Number(pStr.replace(/[￥,]/g, '')).toLocaleString();
+          if (subText) subText += ' / ';
+          subText += `チケ代: ¥${priceVal}`;
+        }
+      }
+
+      let memoBtnHtml = '';
+      if (past && ev.status === '当選') {
+        const hasMemo = ev.memo && ev.memo.trim() !== '';
+        memoBtnHtml = `<button class="btn-memo-edit ${hasMemo ? 'has-memo' : ''}" onclick="openMemoModal(${ev.id})">📝 ${hasMemo ? 'セトリ/メモあり' : 'セトリ/メモ追加'}</button>`;
       }
 
       card.innerHTML = `
@@ -658,19 +1071,23 @@
           <div class="date-day">${dStr}</div>
         </div>
         <div class="card-info">
-          ${showTourTitle && ev.tour ? `<div style="font-size:0.75rem; color:#d81b60; font-weight:bold;">${ev.tour}</div>` : ''}
+          ${showTourTitle && ev.tour ? `<div class="tour-title">📢 ${ev.tour}</div>` : ''}
           <div class="venue-name">${ev.venue}</div>
           <div class="time-info">開場:${ev.openTime} / 開演:${ev.startTime}</div>
-          <select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
-            <option ${ev.group==='ハロー！プロジェクト'?'selected':''}>ハロー！プロジェクト</option>
-            <option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
-            <option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
-            <option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
-            <option ${ev.group==='Juice=Juice'?'selected':''}>Juice=Juice</option>
-            <option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
-            <option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
-            <option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
-          </select>
+          <div class="meta-row">
+            <select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
+              <option ${ev.group==='ハロー！プロジェクト'?'selected':''}>ハロー！プロジェクト</option>
+              <option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
+              <option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
+              <option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
+              <option ${ev.group==='Juice=Juice'?'selected':''}>Juice=Juice</option>
+              <option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
+              <option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
+              <option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
+            </select>
+            ${memoBtnHtml}
+            ${subText ? `<div class="schedule-info">🗓️ ${subText}</div>` : ''}
+          </div>
         </div>
         <button class="status-badge ${statusClass}" onclick="toggleStatus(${ev.id})">${statusLabel}</button>
         <button class="btn-delete" onclick="deleteEvent(${ev.id})">✕</button>
