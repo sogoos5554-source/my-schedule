@@ -56,7 +56,6 @@
       gap: 10px;
       align-items: flex-start;
     }
-    /* ▼ 上部の入力欄のスタイル改善 ▼ */
     textarea#inputText {
       flex: 1;
       min-height: 70px;
@@ -64,7 +63,7 @@
       border-radius: 10px;
       padding: 12px;
       font-size: 0.9rem;
-      line-height: 1.6; /* 行間をあけて見やすく */
+      line-height: 1.6;
       resize: none;
       outline: none;
       box-sizing: border-box;
@@ -150,12 +149,13 @@
     }
     .form-full { grid-column: span 2; }
     .form-control {
-      padding: 6px 8px;
+      padding: 8px;
       border: 1px solid #ffccd5;
       border-radius: 6px;
       font-size: 0.85rem;
       width: 100%;
       box-sizing: border-box;
+      background: #fff;
     }
 
     .group-header {
@@ -294,7 +294,6 @@
       padding: 0 4px;
     }
 
-    /* ▼ メモ・セトリ用モーダルの大幅改良 ▼ */
     #memoModal {
       display: none;
       position: fixed;
@@ -326,23 +325,22 @@
     }
     .modal-textarea {
       width: 100%;
-      height: 55vh; /* スマホ画面の約半分以上の高さを確保 */
+      height: 55vh;
       border: 1px solid #ffb3c1;
-      background: #fff5f7; /* ノートのような淡いピンク背景 */
+      background: #fff5f7;
       border-radius: 12px;
       padding: 16px;
       font-size: 0.95rem;
-      line-height: 1.8; /* 👈 ここがポイント！行間を広げて圧倒的に読みやすく */
+      line-height: 1.8;
       letter-spacing: 0.02em;
       resize: none;
       box-sizing: border-box;
       margin-bottom: 16px;
       outline: none;
       font-family: inherit;
-      transition: background 0.3s, border 0.3s;
     }
     .modal-textarea:focus {
-      background: #ffffff; /* タップして入力中は背景を白に */
+      background: #ffffff;
       border: 2px solid #ff70a6;
     }
     .modal-btns {
@@ -368,14 +366,21 @@
       font-weight: bold;
       cursor: pointer;
     }
- /* スマホなどの狭い画面（幅768px以下）のときだけ適用する設定 */
-@media screen and (max-width: 768px) {
-  .schedule-info { 
-    font-size: 0.7rem; /* スマホのときだけ文字を少し小さくする */
-    display: block;    /* 改行させてスッキリ見せる */
-    margin-top: 4px;
-  }
-} </style>
+
+    @media screen and (max-width: 768px) {
+      .schedule-info { 
+        font-size: 0.7rem;
+        display: block;
+        margin-top: 4px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-full {
+        grid-column: span 1;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -388,7 +393,6 @@
   <div class="input-card">
     <div class="input-title">💭 セトリやメモの追加・スケジュール一括入力</div>
     <div class="input-row">
-      <!-- oninputを追加して、長文ペースト時に自動で縦に伸びるようにしました -->
       <textarea id="inputText" placeholder="例: 公式の告知文をそのまま貼り付けOK" oninput="autoResize(this)"></textarea>
       <button class="btn-send" onclick="handleInput()">送信</button>
     </div>
@@ -429,13 +433,12 @@
         <input type="text" id="mApplyEnd" class="form-control" placeholder="受付締切 (例: 9/7 17:00)">
         <input type="text" id="mAnnounce" class="form-control form-full" placeholder="当落発表 (例: 9/11 15:00)">
       </div>
-      <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none;" onclick="addManualEvent()">追加する</button>
+      <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none; padding:10px;" onclick="addManualEvent()">追加する</button>
     </div>
   </div>
 
   <div id="eventList"></div>
 
-  <!-- セトリ・メモ編集用モーダル -->
   <div id="memoModal">
     <div class="modal-content">
       <div class="modal-title" id="memoModalTitle">📝 セトリ・メモの編集</div>
@@ -455,11 +458,10 @@
     let currentFilter = 'upcoming';
     let editingEventId = null;
 
-    // ▼ 入力エリアの自動リサイズ用関数 ▼
     function autoResize(el) {
-      el.style.height = 'auto'; // 高さをリセットして計算し直す
+      el.style.height = 'auto';
       let newHeight = el.scrollHeight;
-      if (newHeight > 250) newHeight = 250; // 最大でも250pxまでしか伸びないようにする
+      if (newHeight > 250) newHeight = 250;
       el.style.height = newHeight + 'px';
     }
 
@@ -593,8 +595,8 @@
                 startTime: formatTime(item.startTime) || '--:--',
                 venue: cleaned.venue,
                 status: parseStatus(item.status),
-                applyEnd: formatSchedule(item.applyEnd) || '9/7 17:00',
-                announce: formatSchedule(item.announce) || '9/11 15:00',
+                applyEnd: formatSchedule(item.applyEnd) || '',
+                announce: formatSchedule(item.announce) || '',
                 price: item.price !== undefined && item.price !== null ? String(item.price).trim() : '',
                 memo: ''
               });
@@ -629,7 +631,13 @@
     function getDateSortValue(ev) {
       const m = parseInt(ev.month, 10) || 0;
       const d = parseInt(ev.day, 10) || 0;
-      return m * 100 + d;
+      
+      let timeVal = 0;
+      if (ev.startTime && ev.startTime.includes(':')) {
+        const parts = ev.startTime.split(':');
+        timeVal = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      }
+      return (m * 100 + d) * 1440 + timeVal;
     }
 
     function isPastEvent(ev) {
@@ -666,14 +674,14 @@
           saveData();
           showMsg('📋 バックアップ用データを復元しました！');
           textEl.value = '';
-          textEl.style.height = '70px'; // 高さをリセット
+          textEl.style.height = '70px';
           return;
         } catch (e) {}
       }
 
       if (text.includes("申込期間") || text.includes("日本武道館公演") || text.includes("ぴあアリーナMM公演")) {
-        let applyEndStr = "9/7 17:00";
-        let announceStr = "9/11 15:00";
+        let applyEndStr = "";
+        let announceStr = "";
 
         const applyMatch = text.match(/申込期間[:：].*?～.*?(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
         if (applyMatch) {
@@ -687,7 +695,7 @@
 
         let currentGroup = "Juice=Juice";
 
-        const budokanMatch = text.match(/日本武道館公演[:：]\s*.*?(\d{1,2})月(\d{1,2})日/);
+        const budokanMatch = text.match(/日本武道館公演[:：].*?(\d{1,2})月(\d{1,2})日/);
         const bMonth = budokanMatch ? budokanMatch[1] + "月" : "10月";
         const bDay = budokanMatch ? budokanMatch[2] : "23";
         const venueB = "東京都 日本武道館";
@@ -713,12 +721,12 @@
             status: '未応募',
             applyEnd: applyEndStr,
             announce: announceStr,
-            price: "9000",
+            price: "",
             memo: ''
           });
         }
 
-        const piaMatch = text.match(/ぴあアリーナMM公演[:：]\s*.*?(\d{1,2})月(\d{1,2})日/);
+        const piaMatch = text.match(/ぴあアリーナMM公演[:：].*?(\d{1,2})月(\d{1,2})日/);
         const pMonth = piaMatch ? piaMatch[1] + "月" : "11月";
         const pDay = piaMatch ? piaMatch[2] : "12";
         const venueP = "神奈川県 ぴあアリーナMM";
@@ -744,14 +752,14 @@
             status: '未応募',
             applyEnd: applyEndStr,
             announce: announceStr,
-            price: "9000",
+            price: "",
             memo: ''
           });
         }
 
         saveData();
         textEl.value = '';
-        textEl.style.height = '70px'; // 高さをリセット
+        textEl.style.height = '70px';
         showMsg('✨ 公式告知のスケジュールを反映しました！');
         return;
       }
@@ -783,7 +791,7 @@
           if (updated) {
             saveData();
             textEl.value = '';
-            textEl.style.height = '70px'; // 高さをリセット
+            textEl.style.height = '70px';
             showMsg(`🎉 ${targetMonth}${targetDay}日の情報を更新しました！`);
             return;
           }
@@ -844,9 +852,9 @@
             startTime: startTime,
             venue: cleaned.venue,
             status: '未応募',
-            applyEnd: '9/7 17:00',
-            announce: '9/11 15:00',
-            price: '9000',
+            applyEnd: '',
+            announce: '',
+            price: '',
             memo: ''
           });
           addedCount++;
@@ -856,7 +864,7 @@
       if (addedCount > 0) {
         saveData();
         textEl.value = '';
-        textEl.style.height = '70px'; // 高さをリセット
+        textEl.style.height = '70px';
         showMsg('🎉 スケジュールを追加しました！');
       } else {
         showMsg('⚠️ 日付が見つかりませんでした。');
@@ -871,8 +879,8 @@
       const open = document.getElementById('mOpen').value.trim() || '--:--';
       const start = document.getElementById('mStart').value.trim() || '--:--';
       const price = document.getElementById('mPrice').value.trim();
-      const applyEnd = document.getElementById('mApplyEnd').value.trim() || '9/7 17:00';
-      const announce = document.getElementById('mAnnounce').value.trim() || '9/11 15:00';
+      const applyEnd = document.getElementById('mApplyEnd').value.trim();
+      const announce = document.getElementById('mAnnounce').value.trim();
 
       const dObj = parseDateStr(dateStr);
       const cleaned = cleanVenueAndTour(tour, rawVenue);
@@ -1054,9 +1062,7 @@
       } else if (currentTab === 'group') {
         renderGroupedList(listEl, filteredEvents);
       } else {
-        filteredEvents.forEach(ev => {
-          listEl.appendChild(createCard(ev, true));
-        });
+        renderMonthlyList(listEl, filteredEvents);
       }
     }
 
@@ -1086,7 +1092,6 @@
 
       let subText = '';
       
-      // 当選の場合は、締切・当落・チケット代もすべて非表示にする
       if (statusLabel !== '当選') {
         if (ev.applyEnd) subText += `締切: ${ev.applyEnd}`;
         if (ev.announce) {
