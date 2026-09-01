@@ -1,2297 +1,1165 @@
 <!DOCTYPE html>
-
 <html lang="ja">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>ハロプロ公演管理ツール</title>
-
-<style>
-
-body {
-
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-background: #fdf0f5;
-
-margin: 0;
-
-padding: 16px;
-
-color: #333;
-
-}
-
-
-
-.tabs {
-
-display: flex;
-
-gap: 10px;
-
-margin-bottom: 16px;
-
-}
-
-.tab {
-
-flex: 1;
-
-background: #ffffff;
-
-border: 2px solid #ffdeeb;
-
-border-radius: 12px;
-
-padding: 10px 0;
-
-text-align: center;
-
-font-size: 0.9rem;
-
-font-weight: bold;
-
-color: #888;
-
-cursor: pointer;
-
-}
-
-.tab.active {
-
-background: linear-gradient(135deg, #e65cff, #e032e6);
-
-border-color: transparent;
-
-color: #ffffff;
-
-box-shadow: 0 4px 10px rgba(224, 50, 230, 0.3);
-
-}
-
-
-
-.input-card {
-
-background: #ffffff;
-
-border: 2px solid #ffdeeb;
-
-border-radius: 16px;
-
-padding: 16px;
-
-margin-bottom: 20px;
-
-box-shadow: 0 4px 12px rgba(255, 182, 193, 0.15);
-
-}
-
-.input-title {
-
-font-size: 0.9rem;
-
-font-weight: bold;
-
-color: #7a1c6a;
-
-margin-bottom: 10px;
-
-}
-
-.input-row {
-
-display: flex;
-
-gap: 10px;
-
-align-items: flex-start;
-
-}
-
-/* ▼ 上部の入力欄のスタイル改善 ▼ */
-
-textarea#inputText {
-
-flex: 1;
-
-min-height: 70px;
-
-border: 1px solid #ffccd5;
-
-border-radius: 10px;
-
-padding: 12px;
-
-font-size: 0.9rem;
-
-line-height: 1.6; /* 行間をあけて見やすく */
-
-resize: none;
-
-outline: none;
-
-box-sizing: border-box;
-
-font-family: inherit;
-
-transition: border-color 0.2s, background 0.2s;
-
-}
-
-textarea#inputText:focus {
-
-background: #fffcfd;
-
-border-color: #ff70a6;
-
-}
-
-.btn-send {
-
-width: 70px;
-
-height: 70px;
-
-background: linear-gradient(135deg, #e65cff, #e032e6);
-
-color: white;
-
-border: none;
-
-border-radius: 10px;
-
-font-weight: bold;
-
-font-size: 0.95rem;
-
-cursor: pointer;
-
-}
-
-
-
-.msg-area {
-
-font-size: 0.8rem;
-
-color: #d81b60;
-
-margin: 8px 0;
-
-min-height: 1.2em;
-
-font-weight: bold;
-
-}
-
-
-
-.action-btns {
-
-display: flex;
-
-gap: 8px;
-
-margin-bottom: 12px;
-
-flex-wrap: wrap;
-
-}
-
-.btn-sub {
-
-background: #ffffff;
-
-border: 1.5px solid #ffb3c1;
-
-border-radius: 8px;
-
-padding: 6px 12px;
-
-font-size: 0.8rem;
-
-font-weight: bold;
-
-color: #a4133c;
-
-cursor: pointer;
-
-}
-
-
-
-.filter-section {
-
-display: flex;
-
-gap: 6px;
-
-padding-top: 10px;
-
-border-top: 1px dashed #ffccd5;
-
-}
-
-.btn-filter {
-
-flex: 1;
-
-background: #fff5f7;
-
-border: 1px solid #ffccd5;
-
-border-radius: 8px;
-
-padding: 6px 0;
-
-font-size: 0.75rem;
-
-font-weight: bold;
-
-color: #7a1c6a;
-
-cursor: pointer;
-
-text-align: center;
-
-}
-
-.btn-filter.active {
-
-background: #ff70a6;
-
-color: #ffffff;
-
-border-color: #ff70a6;
-
-}
-
-
-
-.manual-form {
-
-display: none;
-
-margin-top: 12px;
-
-padding-top: 12px;
-
-border-top: 1px dashed #ffb3c1;
-
-}
-
-.form-grid {
-
-display: grid;
-
-grid-template-columns: 1fr 1fr;
-
-gap: 8px;
-
-margin-bottom: 8px;
-
-}
-
-.form-full { grid-column: span 2; }
-
-.form-control {
-
-padding: 6px 8px;
-
-border: 1px solid #ffccd5;
-
-border-radius: 6px;
-
-font-size: 0.85rem;
-
-width: 100%;
-
-box-sizing: border-box;
-
-}
-
-
-
-.group-header {
-
-background: linear-gradient(90deg, #ff70a6, #ff9770);
-
-color: white;
-
-padding: 8px 16px;
-
-border-radius: 10px;
-
-font-weight: bold;
-
-font-size: 1rem;
-
-margin-top: 20px;
-
-margin-bottom: 10px;
-
-}
-
-
-
-.month-header {
-
-background: linear-gradient(90deg, #d81b60, #ff4081);
-
-color: white;
-
-padding: 8px 16px;
-
-border-radius: 10px;
-
-font-weight: bold;
-
-font-size: 1rem;
-
-margin-top: 20px;
-
-margin-bottom: 10px;
-
-}
-
-
-
-.tour-sub-header {
-
-color: #8c1d40;
-
-font-size: 0.85rem;
-
-font-weight: bold;
-
-padding: 4px 8px;
-
-margin: 10px 0 6px 4px;
-
-border-left: 3px solid #ff70a6;
-
-background: rgba(255, 255, 255, 0.6);
-
-border-radius: 0 6px 6px 0;
-
-}
-
-
-
-.card {
-
-background: #ffffff;
-
-border-radius: 16px;
-
-padding: 12px;
-
-margin-bottom: 10px;
-
-display: flex;
-
-align-items: center;
-
-gap: 12px;
-
-box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-
-border: 1px solid #fff0f5;
-
-}
-
-.card.past-event {
-
-opacity: 0.65;
-
-background: #f8fafc;
-
-}
-
-
-
-.date-box {
-
-border: 2px solid #4a5568;
-
-border-radius: 12px;
-
-width: 58px;
-
-height: 54px;
-
-display: flex;
-
-flex-direction: column;
-
-align-items: center;
-
-justify-content: center;
-
-flex-shrink: 0;
-
-background: #fff;
-
-}
-
-.date-month { font-size: 0.65rem; font-weight: bold; color: #2d3748; }
-
-.date-day { font-size: 1.1rem; font-weight: 800; color: #1a202c; line-height: 1; }
-
-
-
-.card-info { flex: 1; min-width: 0; }
-
-.tour-title { font-size: 0.75rem; color: #d81b60; font-weight: bold; margin-bottom: 2px; }
-
-.venue-name { font-size: 0.9rem; font-weight: bold; color: #2d3748; white-space: normal; word-break: break-all; }
-
-.time-info { font-size: 0.75rem; color: #718096; margin-top: 2px; }
-
-
-.meta-row {
-
-display: flex;
-
-align-items: center;
-
-gap: 6px;
-
-margin-top: 4px;
-
-flex-wrap: wrap;
-
-}
-
-
-
-.group-select {
-
-border: 1px solid #ffccd5;
-
-border-radius: 6px;
-
-color: #d81b60;
-
-font-size: 0.75rem;
-
-font-weight: bold;
-
-padding: 2px 6px;
-
-background: #fff5f7;
-
-}
-
-
-
-.schedule-info {
-
-font-size: 0.7rem;
-
-color: #d81b60;
-
-font-weight: bold;
-
-}
-
-
-
-.btn-memo-edit {
-
-background: #fff5f7;
-
-border: 1px solid #ffccd5;
-
-border-radius: 6px;
-
-padding: 3px 8px;
-
-font-size: 0.75rem;
-
-font-weight: bold;
-
-color: #d81b60;
-
-cursor: pointer;
-
-}
-
-.btn-memo-edit.has-memo {
-
-background: #ff70a6;
-
-color: white;
-
-border-color: #ff70a6;
-
-}
-
-
-
-.status-badge {
-
-background: #f1f5f9;
-
-color: #64748b;
-
-font-size: 0.75rem;
-
-padding: 6px 8px;
-
-border-radius: 8px;
-
-font-weight: bold;
-
-border: none;
-
-cursor: pointer;
-
-min-width: 68px;
-
-text-align: center;
-
-}
-
-.status-badge.applied { background: #e0f2fe; color: #0284c7; }
-
-.status-badge.won { background: #dcfce7; color: #15803d; }
-
-.status-badge.lost { background: #fee2e2; color: #b91c1c; }
-
-.status-badge.closed { background: #f3e8ff; color: #7e22ce; }
-
-.status-badge.ended { background: #e2e8f0; color: #475569; }
-
-
-
-.btn-delete {
-
-color: #ff8fa3;
-
-background: none;
-
-border: none;
-
-font-size: 1.1rem;
-
-cursor: pointer;
-
-padding: 0 4px;
-
-}
-
-
-
-/* ▼ メモ・セトリ用モーダルの大幅改良 ▼ */
-
-#memoModal {
-
-display: none;
-
-position: fixed;
-
-top: 0; left: 0;
-
-width: 100%; height: 100%;
-
-background: rgba(0,0,0,0.6);
-
-z-index: 1000;
-
-justify-content: center;
-
-align-items: center;
-
-backdrop-filter: blur(2px);
-
-}
-
-.modal-content {
-
-background: white;
-
-width: 92%;
-
-max-width: 500px;
-
-border-radius: 16px;
-
-padding: 20px;
-
-box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-
-max-height: 90vh;
-
-display: flex;
-
-flex-direction: column;
-
-box-sizing: border-box;
-
-}
-
-.modal-title {
-
-font-weight: bold;
-
-color: #d81b60;
-
-margin-bottom: 12px;
-
-font-size: 1rem;
-
-}
-
-.modal-textarea {
-
-width: 100%;
-
-height: 55vh; /* スマホ画面の約半分以上の高さを確保 */
-
-border: 1px solid #ffb3c1;
-
-background: #fff5f7; /* ノートのような淡いピンク背景 */
-
-border-radius: 12px;
-
-padding: 16px;
-
-font-size: 0.95rem;
-
-line-height: 1.8; /* 👈 ここがポイント！行間を広げて圧倒的に読みやすく */
-
-letter-spacing: 0.02em;
-
-resize: none;
-
-box-sizing: border-box;
-
-margin-bottom: 16px;
-
-outline: none;
-
-font-family: inherit;
-
-transition: background 0.3s, border 0.3s;
-
-}
-
-.modal-textarea:focus {
-
-background: #ffffff; /* タップして入力中は背景を白に */
-
-border: 2px solid #ff70a6;
-
-}
-
-.modal-btns {
-
-display: flex;
-
-gap: 10px;
-
-justify-content: flex-end;
-
-}
-
-.modal-btn-cancel {
-
-background: #e2e8f0;
-
-color: #475569;
-
-border: none;
-
-padding: 10px 20px;
-
-border-radius: 8px;
-
-font-weight: bold;
-
-cursor: pointer;
-
-}
-
-.modal-btn-save {
-
-background: linear-gradient(135deg, #e65cff, #e032e6);
-
-color: white;
-
-border: none;
-
-padding: 10px 24px;
-
-border-radius: 8px;
-
-font-weight: bold;
-
-cursor: pointer;
-
-}
-
-/* スマホなどの狭い画面（幅768px以下）のときだけ適用する設定 */
-
-@media screen and (max-width: 768px) {
-
-.schedule-info {
-
-font-size: 0.7rem; /* スマホのときだけ文字を少し小さくする */
-
-display: block; /* 改行させてスッキリ見せる */
-
-margin-top: 4px;
-
-}
-
-} </style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ハロプロ公演管理ツール</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fdf0f5;
+      margin: 0;
+      padding: 16px;
+      color: #333;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .tab {
+      flex: 1;
+      background: #ffffff;
+      border: 2px solid #ffdeeb;
+      border-radius: 12px;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #888;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, #e65cff, #e032e6);
+      border-color: transparent;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(224, 50, 230, 0.3);
+    }
+
+    .input-card {
+      background: #ffffff;
+      border: 2px solid #ffdeeb;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(255, 182, 193, 0.15);
+    }
+    .input-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #7a1c6a;
+      margin-bottom: 10px;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    textarea#inputText {
+      flex: 1;
+      min-height: 70px;
+      border: 1px solid #ffccd5;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+      box-sizing: border-box;
+      font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    textarea#inputText:focus {
+      background: #fffcfd;
+      border-color: #ff70a6;
+    }
+    .btn-send {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #e65cff, #e032e6);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .msg-area {
+      font-size: 0.8rem;
+      color: #d81b60;
+      margin: 8px 0;
+      min-height: 1.2em;
+      font-weight: bold;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-sub {
+      background: #ffffff;
+      border: 1.5px solid #ffb3c1;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #a4133c;
+      cursor: pointer;
+    }
+
+    .filter-section {
+      display: flex;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed #ffccd5;
+    }
+    .btn-filter {
+      flex: 1;
+      background: #fff5f7;
+      border: 1px solid #ffccd5;
+      border-radius: 8px;
+      padding: 6px 0;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #7a1c6a;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-filter.active {
+      background: #ff70a6;
+      color: #ffffff;
+      border-color: #ff70a6;
+    }
+
+    .manual-form {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #ffb3c1;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .form-full { grid-column: span 2; }
+    .form-control {
+      padding: 6px 8px;
+      border: 1px solid #ffccd5;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .group-header {
+      background: linear-gradient(90deg, #ff70a6, #ff9770);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .month-header {
+      background: linear-gradient(90deg, #d81b60, #ff4081);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .tour-sub-header {
+      color: #8c1d40;
+      font-size: 0.85rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      margin: 10px 0 6px 4px;
+      border-left: 3px solid #ff70a6;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      border: 1px solid #fff0f5;
+    }
+    .card.past-event {
+      opacity: 0.65;
+      background: #f8fafc;
+    }
+
+    .date-box {
+      border: 2px solid #4a5568;
+      border-radius: 12px;
+      width: 58px;
+      height: 54px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .date-month { font-size: 0.65rem; font-weight: bold; color: #2d3748; }
+    .date-day { font-size: 1.1rem; font-weight: 800; color: #1a202c; line-height: 1; }
+
+    .card-info { flex: 1; min-width: 0; }
+    .tour-title { font-size: 0.75rem; color: #d81b60; font-weight: bold; margin-bottom: 2px; }
+    .venue-name { font-size: 0.9rem; font-weight: bold; color: #2d3748; white-space: normal; word-break: break-all; }
+    .time-info { font-size: 0.75rem; color: #718096; margin-top: 2px; }
+    
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .group-select {
+      border: 1px solid #ffccd5;
+      border-radius: 6px;
+      color: #d81b60;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      background: #fff5f7;
+    }
+
+    .schedule-info { 
+      font-size: 0.7rem; 
+      color: #d81b60; 
+      font-weight: bold;
+    }
+
+    .btn-memo-edit {
+      background: #fff5f7;
+      border: 1px solid #ffccd5;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: #d81b60;
+      cursor: pointer;
+    }
+    .btn-memo-edit.has-memo {
+      background: #ff70a6;
+      color: white;
+      border-color: #ff70a6;
+    }
+
+    .status-badge {
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 0.75rem;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      min-width: 68px;
+      text-align: center;
+    }
+    .status-badge.applied { background: #e0f2fe; color: #0284c7; }
+    .status-badge.won { background: #dcfce7; color: #15803d; }
+    .status-badge.lost { background: #fee2e2; color: #b91c1c; }
+    .status-badge.closed { background: #f3e8ff; color: #7e22ce; }
+    .status-badge.ended { background: #e2e8f0; color: #475569; }
+
+    .btn-delete {
+      color: #ff8fa3;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    #memoModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(2px);
+    }
+    .modal-content {
+      background: white;
+      width: 92%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+    .modal-title {
+      font-weight: bold;
+      color: #d81b60;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    .modal-textarea {
+      width: 100%;
+      height: 55vh;
+      border: 1px solid #ffb3c1;
+      background: #fff5f7;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      letter-spacing: 0.02em;
+      resize: none;
+      box-sizing: border-box;
+      margin-bottom: 16px;
+      outline: none;
+      font-family: inherit;
+      transition: background 0.3s, border 0.3s;
+    }
+    .modal-textarea:focus {
+      background: #ffffff;
+      border: 2px solid #ff70a6;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .modal-btn-cancel {
+      background: #e2e8f0;
+      color: #475569;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .modal-btn-save {
+      background: linear-gradient(135deg, #e65cff, #e032e6);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 768px) {
+      .schedule-info { 
+        font-size: 0.7rem; 
+        display: block;    
+        margin-top: 4px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-
-
-<div class="tabs">
-
-<div class="tab active" onclick="switchTab('all', this)">📅 日程順</div>
-
-<div class="tab" onclick="switchTab('group', this)">🎤 グループ別</div>
-
-<div class="tab" onclick="switchTab('attending', this)">🎟 参戦予定</div>
-
-</div>
-
-
-
-<div class="input-card">
-
-<div class="input-title">💭 セトリやメモの追加・スケジュール一括入力</div>
-
-<div class="input-row">
-
-<!-- oninputを追加して、長文ペースト時に自動で縦に伸びるようにしました -->
-
-<textarea id="inputText" placeholder="例: 公式の告知文をそのまま貼り付けOK" oninput="autoResize(this)"></textarea>
-
-<button class="btn-send" onclick="handleInput()">送信</button>
-
-</div>
-
-
-
-<div id="msgArea" class="msg-area"></div>
-
-
-
-<div class="action-btns">
-
-<button class="btn-sub" onclick="fetchFromGAS()">☁️ シートから同期</button>
-
-<button class="btn-sub" onclick="toggleManualForm()">＋ 手動追加</button>
-
-<button class="btn-sub" onclick="exportData()">📱 バックアップ出力</button>
-
-<button class="btn-sub" onclick="resetData()">初期化</button>
-
-</div>
-
-
-
-<div class="filter-section">
-
-<button class="btn-filter" onclick="setFilter('all', this)">🌐 全部の公演</button>
-
-<button class="btn-filter active" onclick="setFilter('upcoming', this)">✨ 今後の公演</button>
-
-<button class="btn-filter" onclick="setFilter('archive', this)">📦 終了・落選</button>
-
-</div>
-
-
-
-<div id="manualForm" class="manual-form">
-
-<div class="form-grid">
-
-<input type="text" id="mTour" class="form-control form-full" placeholder="公演名・ツアー名（任意）">
-
-<select id="mGroup" class="form-control">
-
-<option>ハロー！プロジェクト</option>
-
-<option>OCHA NORMA</option>
-
-<option>モーニング娘。</option>
-
-<option>アンジュルム</option>
-
-<option>Juice=Juice</option>
-
-<option>つばきファクトリー</option>
-
-<option>BEYOOOOONDS</option>
-
-<option>ロージークロニクル</option>
-
-</select>
-
-<input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/23)">
-
-<input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 日本武道館)">
-
-<input type="text" id="mOpen" class="form-control" placeholder="開場 (例: 17:00)">
-
-<input type="text" id="mStart" class="form-control" placeholder="開演 (例: 18:00)">
-
-<input type="text" id="mPrice" class="form-control" placeholder="チケット代 (例: 9000)">
-
-<input type="text" id="mApplyEnd" class="form-control" placeholder="受付締切 (例: 9/7 17:00)">
-
-<input type="text" id="mAnnounce" class="form-control form-full" placeholder="当落発表 (例: 9/11 15:00)">
-
-</div>
-
-<button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none;" onclick="addManualEvent()">追加する</button>
-
-</div>
-
-</div>
-
-
-
-<div id="eventList"></div>
-
-
-
-<!-- セトリ・メモ編集用モーダル -->
-
-<div id="memoModal">
-
-<div class="modal-content">
-
-<div class="modal-title" id="memoModalTitle">📝 セトリ・メモの編集</div>
-
-<textarea id="memoModalText" class="modal-textarea" placeholder="ここにセトリや感想を書き込めます..."></textarea>
-
-<div class="modal-btns">
-
-<button class="modal-btn-cancel" onclick="closeMemoModal()">キャンセル</button>
-
-<button class="modal-btn-save" onclick="saveMemoModal()">保存する</button>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<script>
-
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK5LvyKxjFkCrz6PKujV_SV8fgfmjCPAizugpxOdZW8flyusKQJGWtpueXl6GsHCzY/exec';
-
-
-
-let events = JSON.parse(localStorage.getItem('hp_events') || '[]');
-
-let currentTab = 'all';
-
-let currentFilter = 'upcoming';
-
-let editingEventId = null;
-
-
-
-// ▼ 入力エリアの自動リサイズ用関数 ▼
-
-function autoResize(el) {
-
-el.style.height = 'auto'; // 高さをリセットして計算し直す
-
-let newHeight = el.scrollHeight;
-
-if (newHeight > 250) newHeight = 250; // 最大でも250pxまでしか伸びないようにする
-
-el.style.height = newHeight + 'px';
-
-}
-
-
-
-function cleanVenueAndTour(rawTitle, rawVenue) {
-
-let tour = rawTitle || 'ツアー指定なし';
-
-let venue = rawVenue || '会場未定';
-
-
-
-if (venue.includes(' - ')) {
-
-const parts = venue.split(' - ');
-
-venue = parts[parts.length - 1];
-
-}
-
-
-
-if (!/^(東京都|北海道|(京都|大阪)府|.{2,3}県)/.test(venue)) {
-
-if (venue.includes('日本武道館')) venue = '東京都 ' + venue;
-
-else if (venue.includes('ぴあアリーナ')) venue = '神奈川県 ' + venue;
-
-else if (venue.includes('PORTBASE')) venue = '愛知県 ' + venue;
-
-else if (venue.includes('リリア')) venue = '埼玉県 ' + venue;
-
-else if (venue.includes('立川ステージガーデン')) venue = '東京都 ' + venue;
-
-else if (venue.includes('ハーモニーホール座間')) venue = '神奈川県 ' + venue;
-
-else if (venue.includes('NHKホール')) venue = '東京都 ' + venue;
-
-else if (venue.includes('横浜アリーナ')) venue = '神奈川県 ' + venue;
-
-else if (venue.includes('COOL JAPAN PARK')) venue = '大阪府 ' + venue;
-
-else if (venue.includes('オリックス劇場')) venue = '大阪府 ' + venue;
-
-}
-
-
-
-return { tour, venue };
-
-}
-
-
-
-function formatTime(val) {
-
-if (!val) return '';
-
-const str = String(val);
-
-
-
-if (str.includes('T') || str.includes('1899-')) {
-
-const d = new Date(str);
-
-if (!isNaN(d.getTime())) {
-
-let h = d.getUTCHours() + 9;
-
-const m = d.getUTCMinutes();
-
-if (h >= 24) h -= 24;
-
-return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-
-}
-
-}
-
-
-
-const match = str.match(/(\d{1,2}):(\d{2})/);
-
-if (match) {
-
-return `${String(match[1]).padStart(2,'0')}:${match[2]}`;
-
-}
-
-return str;
-
-}
-
-
-
-function formatSchedule(val) {
-
-if (!val) return '';
-
-const str = String(val);
-
-
-
-if (str.includes('T') || str.includes('1899-')) {
-
-const d = new Date(str);
-
-if (!isNaN(d.getTime())) {
-
-let h = d.getUTCHours() + 9;
-
-const m = d.getUTCMinutes();
-
-if (h >= 24) h -= 24;
-
-if (h === 0 && m === 0 && str.includes('00:00:00')) {
-
-return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
-
-}
-
-return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-
-}
-
-}
-
-return str;
-
-}
-
-
-
-function saveData() {
-
-localStorage.setItem('hp_events', JSON.stringify(events));
-
-render();
-
-}
-
-
-
-function showMsg(text) {
-
-document.getElementById('msgArea').innerText = text;
-
-}
-
-
-
-function parseStatus(rawStatus) {
-
-if (!rawStatus) return '未応募';
-
-const validStatuses = ['未応募', '応募済み', '当落待ち', '当選', '落選', '抽選終了'];
-
-if (validStatuses.includes(rawStatus)) {
-
-return rawStatus;
-
-}
-
-return '未応募';
-
-}
-
-
-
-function fetchFromGAS() {
-
-showMsg('☁️ スプレッドシートから最新データを取得中...');
-
-
-const controller = new AbortController();
-
-const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-
-
-fetch(GAS_URL, { signal: controller.signal })
-
-.then(res => res.json())
-
-.then(data => {
-
-clearTimeout(timeoutId);
-
-if (!data || data.length === 0) {
-
-showMsg('⚠️ シートにデータがありませんでした。');
-
-render();
-
-return;
-
-}
-
-
-
-data.forEach(item => {
-
-if (!item.month || !item.day) return;
-
-
-
-let mStr = String(item.month).includes('月') ? item.month : item.month + '月';
-
-let dStr = String(item.day).replace('日', '');
-
-
-
-const cleaned = cleanVenueAndTour(item.title, item.venue);
-
-
-
-let existing = events.find(e => e.month === mStr && e.day === dStr && (e.venue.includes(cleaned.venue) || cleaned.venue.includes(e.venue)));
-
-
-
-if (existing) {
-
-existing.tour = existing.tour && existing.tour !== 'ツアー指定なし' ? existing.tour : cleaned.tour;
-
-existing.openTime = formatTime(item.openTime) || existing.openTime;
-
-existing.startTime = formatTime(item.startTime) || existing.startTime;
-
-existing.price = item.price !== undefined && item.price !== null && String(item.price).trim() !== '' ? String(item.price).trim() : existing.price;
-
-if (item.applyEnd) existing.applyEnd = formatSchedule(item.applyEnd);
-
-if (item.announce) existing.announce = formatSchedule(item.announce);
-
-if (item.group && item.group !== 'ハロー！プロジェクト') {
-
-existing.group = item.group;
-
-}
-
-} else {
-
-events.push({
-
-id: Date.now() + Math.random(),
-
-tour: cleaned.tour,
-
-group: item.group || 'ハロー！プロジェクト',
-
-month: mStr,
-
-day: dStr,
-
-openTime: formatTime(item.openTime) || '--:--',
-
-startTime: formatTime(item.startTime) || '--:--',
-
-venue: cleaned.venue,
-
-status: parseStatus(item.status),
-
-applyEnd: formatSchedule(item.applyEnd) || '9/7 17:00',
-
-announce: formatSchedule(item.announce) || '9/11 15:00',
-
-price: item.price !== undefined && item.price !== null ? String(item.price).trim() : '',
-
-memo: ''
-
-});
-
-}
-
-});
-
-
-
-saveData();
-
-showMsg('✨ スプレッドシートから同期しました！');
-
-})
-
-.catch(err => {
-
-clearTimeout(timeoutId);
-
-console.warn('GAS Fetch Warning:', err);
-
-showMsg('⚠️ 通信エラー。保存済みのローカルデータを表示します。');
-
-render();
-
-});
-
-}
-
-
-
-function toggleManualForm() {
-
-const form = document.getElementById('manualForm');
-
-form.style.display = form.style.display === 'block' ? 'none' : 'block';
-
-}
-
-
-
-function parseDateStr(str) {
-
-if (!str) return { month: '10月', day: '23' };
-
-const mMatch = str.match(/(\d{1,2})[月\/](\d{1,2})/);
-
-if (mMatch) {
-
-return { month: mMatch[1] + '月', day: mMatch[2] };
-
-}
-
-return { month: '日程', day: str };
-
-}
-
-
-
-function getDateSortValue(ev) {
-
-const m = parseInt(ev.month, 10) || 0;
-
-const d = parseInt(ev.day, 10) || 0;
-
-return m * 100 + d;
-
-}
-
-
-
-function isPastEvent(ev) {
-
-const now = new Date();
-
-const currentYear = now.getFullYear();
-
-const m = parseInt(ev.month, 10);
-
-const d = parseInt(ev.day, 10);
-
-
-
-if (!m || !d) return false;
-
-
-
-const evDate = new Date(currentYear, m - 1, d, 23, 59, 59);
-
-if (now.getMonth() === 11 && m === 1) {
-
-evDate.setFullYear(currentYear + 1);
-
-}
-
-
-
-return evDate < now;
-
-}
-
-
-
-function setFilter(filterType, el) {
-
-currentFilter = filterType;
-
-document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
-
-el.classList.add('active');
-
-render();
-
-}
-
-
-
-function handleInput() {
-
-const textEl = document.getElementById('inputText');
-
-const text = textEl.value.trim();
-
-if (!text) return;
-
-
-
-if (text.startsWith('[') && text.endsWith(']')) {
-
-try {
-
-events = JSON.parse(text);
-
-saveData();
-
-showMsg('📋 バックアップ用データを復元しました！');
-
-textEl.value = '';
-
-textEl.style.height = '70px'; // 高さをリセット
-
-return;
-
-} catch (e) {}
-
-}
-
-
-
-if (text.includes("申込期間") || text.includes("日本武道館公演") || text.includes("ぴあアリーナMM公演")) {
-
-let applyEndStr = "9/7 17:00";
-
-let announceStr = "9/11 15:00";
-
-
-
-const applyMatch = text.match(/申込期間[:：].*?～.*?(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
-
-if (applyMatch) {
-
-applyEndStr = `${applyMatch[1]}/${applyMatch[2]} ${applyMatch[3]}:00`;
-
-}
-
-
-
-const announceMatch = text.match(/当選[・及]落選確認期間[:：]\s*(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
-
-if (announceMatch) {
-
-announceStr = `${announceMatch[1]}/${announceMatch[2]} ${announceMatch[3]}:00`;
-
-}
-
-
-
-let currentGroup = "Juice=Juice";
-
-
-
-const budokanMatch = text.match(/日本武道館公演[:：]\s*.*?(\d{1,2})月(\d{1,2})日/);
-
-const bMonth = budokanMatch ? budokanMatch[1] + "月" : "10月";
-
-const bDay = budokanMatch ? budokanMatch[2] : "23";
-
-const venueB = "東京都 日本武道館";
-
-const tourB = "Juice=Juice Room Tour 2026 「5ROOMS -SUITE-」";
-
-
-
-let existingB = events.find(e => e.venue.includes("日本武道館"));
-
-if (existingB) {
-
-existingB.month = bMonth;
-
-existingB.day = bDay;
-
-existingB.applyEnd = applyEndStr;
-
-existingB.announce = announceStr;
-
-existingB.tour = tourB;
-
-} else {
-
-events.push({
-
-id: Date.now() + Math.random(),
-
-tour: tourB,
-
-group: currentGroup,
-
-month: bMonth,
-
-day: bDay,
-
-openTime: "17:00",
-
-startTime: "18:00",
-
-venue: venueB,
-
-status: '未応募',
-
-applyEnd: applyEndStr,
-
-announce: announceStr,
-
-price: "9000",
-
-memo: ''
-
-});
-
-}
-
-
-
-const piaMatch = text.match(/ぴあアリーナMM公演[:：]\s*.*?(\d{1,2})月(\d{1,2})日/);
-
-const pMonth = piaMatch ? piaMatch[1] + "月" : "11月";
-
-const pDay = piaMatch ? piaMatch[2] : "12";
-
-const venueP = "神奈川県 ぴあアリーナMM";
-
-const tourP = "Juice=Juice Room Tour 2026 「5ROOMS -ROYAL SUITE-」";
-
-
-
-let existingP = events.find(e => e.venue.includes("ぴあアリーナMM"));
-
-if (existingP) {
-
-existingP.month = pMonth;
-
-existingP.day = pDay;
-
-existingP.applyEnd = applyEndStr;
-
-existingP.announce = announceStr;
-
-existingP.tour = tourP;
-
-} else {
-
-events.push({
-
-id: Date.now() + Math.random(),
-
-tour: tourP,
-
-group: currentGroup,
-
-month: pMonth,
-
-day: pDay,
-
-openTime: "17:00",
-
-startTime: "18:00",
-
-venue: venueP,
-
-status: '未応募',
-
-applyEnd: applyEndStr,
-
-announce: announceStr,
-
-price: "9000",
-
-memo: ''
-
-});
-
-}
-
-
-
-saveData();
-
-textEl.value = '';
-
-textEl.style.height = '70px'; // 高さをリセット
-
-showMsg('✨ 公式告知のスケジュールを反映しました！');
-
-return;
-
-}
-
-
-
-const isApplied = /(応募|申し込んだ|申込|エントリー|申し込む)/.test(text);
-
-const isWon = /(当選|当たった|チケット取れた|参戦確定|ご用意された)/.test(text);
-
-const isLost = /(落選|外れた|全滅|ダメだった|ご用意されなかった)/.test(text);
-
-const isClosed = /(抽選終了|受付終了|見送り|締め切り)/.test(text);
-
-
-
-const dateMatch = text.match(/(\d{1,2})月(\d{1,2})日/) || text.match(/(\d{1,2})\/(\d{1,2})/);
-
-
-
-if (dateMatch) {
-
-const targetMonth = dateMatch[1] + "月";
-
-const targetDay = dateMatch[2];
-
-const targetEvent = events.find(e => e.month === targetMonth && e.day === targetDay);
-
-
-
-if (targetEvent) {
-
-let updated = false;
-
-if (isWon) { targetEvent.status = '当選'; updated = true; }
-
-else if (isLost) { targetEvent.status = '落選'; updated = true; }
-
-else if (isApplied) { targetEvent.status = '応募済み'; updated = true; }
-
-else if (isClosed) { targetEvent.status = '抽選終了'; updated = true; }
-
-
-
-if ((!isApplied && !isWon && !isLost && !isClosed) || text.includes('セトリ') || text.includes('メモ') || text.includes('￥') || text.includes('円') || text.includes('レポ')) {
-
-targetEvent.memo = (targetEvent.memo ? targetEvent.memo + '\n\n' : '') + text;
-
-updated = true;
-
-}
-
-
-
-if (updated) {
-
-saveData();
-
-textEl.value = '';
-
-textEl.style.height = '70px'; // 高さをリセット
-
-showMsg(`🎉 ${targetMonth}${targetDay}日の情報を更新しました！`);
-
-return;
-
-}
-
-}
-
-}
-
-
-
-const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-
-let currentTour = "指定なし・単独イベント";
-
-let currentGroup = "ハロー！プロジェクト";
-
-let addedCount = 0;
-
-
-
-lines.forEach(line => {
-
-if (line.includes("公演日") && line.includes("会場")) return;
-
-
-
-if (line.includes("ハロー！プロジェクト") || line.includes("Hello! Project")) currentGroup = "ハロー！プロジェクト";
-
-else if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
-
-else if (line.includes("モーニング娘。")) currentGroup = "モーニング娘。";
-
-else if (line.includes("アンジュルム")) currentGroup = "アンジュルム";
-
-else if (line.includes("Juice=Juice")) currentGroup = "Juice=Juice";
-
-else if (line.includes("つばきファクトリー")) currentGroup = "つばきファクトリー";
-
-else if (line.includes("BEYOOOOONDS")) currentGroup = "BEYOOOOONDS";
-
-else if (line.includes("ロージークロニクル")) currentGroup = "ロージークロニクル";
-
-
-
-if ((line.includes("公演名") || line.includes("出演") || line.includes("TOUR") || line.includes("ツアー") || line.includes("『")) && !line.match(/\d{1,2}月\d{1,2}日/)) {
-
-currentTour = line.replace(/^公演名[\s\t]*/, '').trim();
-
-return;
-
-}
-
-
-
-const dMatch = line.match(/(\d{1,2})月(\d{1,2})日/) || line.match(/(\d{1,2})\/(\d{1,2})/);
-
-const timeMatches = line.match(/(\d{1,2}:\d{2})/g);
-
-
-
-if (dMatch) {
-
-let openTime = '--:--';
-
-let startTime = '--:--';
-
-
-
-if (timeMatches) {
-
-if (timeMatches.length >= 2) {
-
-openTime = timeMatches[0];
-
-startTime = timeMatches[1];
-
-} else if (timeMatches.length === 1) {
-
-startTime = timeMatches[0];
-
-}
-
-}
-
-
-
-let cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
-
-.replace(/\d{1,2}:\d{2}/g, '')
-
-.trim();
-
-
-
-const cleaned = cleanVenueAndTour(currentTour, cleanLine);
-
-
-
-events.push({
-
-id: Date.now() + Math.random(),
-
-tour: cleaned.tour,
-
-group: currentGroup,
-
-month: dMatch[1] + "月",
-
-day: dMatch[2],
-
-openTime: openTime,
-
-startTime: startTime,
-
-venue: cleaned.venue,
-
-status: '未応募',
-
-applyEnd: '9/7 17:00',
-
-announce: '9/11 15:00',
-
-price: '9000',
-
-memo: ''
-
-});
-
-addedCount++;
-
-}
-
-});
-
-
-
-if (addedCount > 0) {
-
-saveData();
-
-textEl.value = '';
-
-textEl.style.height = '70px'; // 高さをリセット
-
-showMsg('🎉 スケジュールを追加しました！');
-
-} else {
-
-showMsg('⚠️ 日付が見つかりませんでした。');
-
-}
-
-}
-
-
-
-function addManualEvent() {
-
-const tour = document.getElementById('mTour').value.trim() || '単独イベント・その他';
-
-const group = document.getElementById('mGroup').value;
-
-const dateStr = document.getElementById('mDate').value.trim();
-
-const rawVenue = document.getElementById('mVenue').value.trim();
-
-const open = document.getElementById('mOpen').value.trim() || '--:--';
-
-const start = document.getElementById('mStart').value.trim() || '--:--';
-
-const price = document.getElementById('mPrice').value.trim();
-
-const applyEnd = document.getElementById('mApplyEnd').value.trim() || '9/7 17:00';
-
-const announce = document.getElementById('mAnnounce').value.trim() || '9/11 15:00';
-
-
-
-const dObj = parseDateStr(dateStr);
-
-const cleaned = cleanVenueAndTour(tour, rawVenue);
-
-
-
-events.push({
-
-id: Date.now() + Math.random(),
-
-tour: cleaned.tour,
-
-group: group,
-
-month: dObj.month,
-
-day: dObj.day,
-
-openTime: open,
-
-startTime: start,
-
-venue: cleaned.venue,
-
-status: '未応募',
-
-price: price,
-
-applyEnd: applyEnd,
-
-announce: announce,
-
-memo: ''
-
-});
-
-
-
-saveData();
-
-toggleManualForm();
-
-
-document.getElementById('mTour').value = '';
-
-document.getElementById('mDate').value = '';
-
-document.getElementById('mVenue').value = '';
-
-document.getElementById('mOpen').value = '';
-
-document.getElementById('mStart').value = '';
-
-document.getElementById('mPrice').value = '';
-
-document.getElementById('mApplyEnd').value = '';
-
-document.getElementById('mAnnounce').value = '';
-
-
-
-showMsg('➕ 手動で公演を追加しました！');
-
-}
-
-
-
-function exportData() {
-
-const dataStr = JSON.stringify(events);
-
-navigator.clipboard.writeText(dataStr).then(() => {
-
-showMsg('📋 バックアップ用データをコピーしました！');
-
-});
-
-}
-
-
-
-function resetData() {
-
-if (confirm('すべてのデータを消去して初期化しますか？')) {
-
-events = [];
-
-saveData();
-
-showMsg('データを初期化しました。');
-
-}
-
-}
-
-
-
-function toggleStatus(id) {
-
-const ev = events.find(e => e.id === id);
-
-if (!ev) return;
-
-if (ev.status === '未応募') ev.status = '応募済み';
-
-else if (ev.status === '応募済み' || ev.status === '当落待ち') ev.status = '当選';
-
-else if (ev.status === '当選') ev.status = '落選';
-
-else if (ev.status === '落選') ev.status = '抽選終了';
-
-else ev.status = '未応募';
-
-saveData();
-
-}
-
-
-
-function openMemoModal(id) {
-
-editingEventId = id;
-
-const ev = events.find(e => e.id === id);
-
-if (!ev) return;
-
-
-
-document.getElementById('memoModalTitle').innerText = `📝 ${ev.month}${ev.day} ${ev.venue}`;
-
-document.getElementById('memoModalText').value = ev.memo || '';
-
-document.getElementById('memoModal').style.display = 'flex';
-
-}
-
-
-
-function closeMemoModal() {
-
-document.getElementById('memoModal').style.display = 'none';
-
-editingEventId = null;
-
-}
-
-
-
-function saveMemoModal() {
-
-if (editingEventId === null) return;
-
-const ev = events.find(e => e.id === editingEventId);
-
-if (ev) {
-
-ev.memo = document.getElementById('memoModalText').value.trim();
-
-saveData();
-
-showMsg('📝 セトリ・メモを保存しました！');
-
-}
-
-closeMemoModal();
-
-}
-
-
-
-function deleteEvent(id) {
-
-events = events.filter(e => e.id !== id);
-
-saveData();
-
-}
-
-
-
-function switchTab(tab, el) {
-
-currentTab = tab;
-
-document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
-el.classList.add('active');
-
-render();
-
-}
-
-
-
-function getFilteredEvents() {
-
-let result = [...events];
-
-
-
-if (currentFilter === 'upcoming') {
-
-result = result.filter(e => !isPastEvent(e) && e.status !== '落選' && e.status !== '抽選終了');
-
-} else if (currentFilter === 'archive') {
-
-result = result.filter(e => isPastEvent(e) || e.status === '落選' || e.status === '抽選終了');
-
-}
-
-
-
-return result.sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
-
-}
-
-
-
-function renderGroupedList(listEl, displayEvents) {
-
-const groupMinDate = {};
-
-displayEvents.forEach(e => {
-
-const val = getDateSortValue(e);
-
-if (groupMinDate[e.group] === undefined || val < groupMinDate[e.group]) {
-
-groupMinDate[e.group] = val;
-
-}
-
-});
-
-
-
-const groups = [...new Set(displayEvents.map(e => e.group))];
-
-groups.sort((a, b) => (groupMinDate[a] || 0) - (groupMinDate[b] || 0));
-
-
-
-groups.forEach(g => {
-
-const header = document.createElement('div');
-
-header.className = 'group-header';
-
-header.innerText = `🎤 ${g}`;
-
-listEl.appendChild(header);
-
-
-
-const groupEvs = displayEvents.filter(e => e.group === g);
-
-const tours = [...new Set(groupEvs.map(e => e.tour || 'ツアー指定なし'))];
-
-
-
-tours.forEach(t => {
-
-if (t && t !== '指定なし・単独イベント') {
-
-const subHeader = document.createElement('div');
-
-subHeader.className = 'tour-sub-header';
-
-subHeader.innerText = `📢 ${t}`;
-
-listEl.appendChild(subHeader);
-
-}
-
-
-
-const sortedInTour = groupEvs.filter(e => (e.tour || 'ツアー指定なし') === t)
-
-.sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
-
-
-
-sortedInTour.forEach(ev => {
-
-listEl.appendChild(createCard(ev, false));
-
-});
-
-});
-
-});
-
-}
-
-
-
-function renderMonthlyList(listEl, displayEvents) {
-
-const months = [...new Set(displayEvents.map(e => e.month))];
-
-months.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
-
-
-
-months.forEach(m => {
-
-const header = document.createElement('div');
-
-header.className = 'month-header';
-
-header.innerText = `🗓️ ${m}`;
-
-listEl.appendChild(header);
-
-
-
-const monthEvs = displayEvents.filter(e => e.month === m)
-
-.sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
-
-
-
-monthEvs.forEach(ev => {
-
-listEl.appendChild(createCard(ev, true));
-
-});
-
-});
-
-}
-
-
-
-function render() {
-
-const listEl = document.getElementById('eventList');
-
-listEl.innerHTML = '';
-
-
-
-const filteredEvents = getFilteredEvents();
-
-
-
-if (currentTab === 'attending') {
-
-const displayEvents = filteredEvents.filter(e => e.status === '当選' || isPastEvent(e));
-
-renderMonthlyList(listEl, displayEvents);
-
-} else if (currentTab === 'group') {
-
-renderGroupedList(listEl, filteredEvents);
-
-} else {
-
-filteredEvents.forEach(ev => {
-
-listEl.appendChild(createCard(ev, true));
-
-});
-
-}
-
-}
-
-
-
-function createCard(ev, showTourTitle = false) {
-
-const card = document.createElement('div');
-
-const past = isPastEvent(ev);
-
-card.className = `card ${past ? 'past-event' : ''}`;
-
-
-
-let mStr = ev.month;
-
-let dStr = ev.day;
-
-
-
-let statusClass = '';
-
-let statusLabel = parseStatus(ev.status);
-
-
-
-if (statusLabel === '応募済み' || statusLabel === '当落待ち') {
-
-statusClass = 'applied';
-
-} else if (statusLabel === '当選') {
-
-statusClass = 'won';
-
-} else if (statusLabel === '抽選終了') {
-
-statusClass = 'closed';
-
-} else if (statusLabel === '落選') {
-
-statusClass = 'lost';
-
-} else if (past) {
-
-statusClass = 'ended';
-
-statusLabel = '終了';
-
-}
-
-
-
-let subText = '';
-
-
-// 当選の場合は、締切・当落・チケット代もすべて非表示にする
-
-if (statusLabel !== '当選') {
-
-if (ev.applyEnd) subText += `締切: ${ev.applyEnd}`;
-
-if (ev.announce) {
-
-if (subText) subText += ' / ';
-
-subText += `当落: ${ev.announce}`;
-
-}
-
-if (ev.price !== undefined && ev.price !== null && String(ev.price).trim() !== '') {
-
-const pStr = String(ev.price).trim();
-
-const priceVal = isNaN(pStr.replace(/[￥,]/g, '')) ? pStr : Number(pStr.replace(/[￥,]/g, '')).toLocaleString();
-
-if (subText) subText += ' / ';
-
-subText += `チケ代: ¥${priceVal}`;
-
-}
-
-}
-
-
-
-let memoBtnHtml = '';
-
-if (past && ev.status === '当選') {
-
-const hasMemo = ev.memo && ev.memo.trim() !== '';
-
-memoBtnHtml = `<button class="btn-memo-edit ${hasMemo ? 'has-memo' : ''}" onclick="openMemoModal(${ev.id})">📝 ${hasMemo ? 'セトリ/メモあり' : 'セトリ/メモ追加'}</button>`;
-
-}
-
-
-
-card.innerHTML = `
-
-<div class="date-box">
-
-<div class="date-month">${mStr}</div>
-
-<div class="date-day">${dStr}</div>
-
-</div>
-
-<div class="card-info">
-
-${showTourTitle && ev.tour ? `<div class="tour-title">📢 ${ev.tour}</div>` : ''}
-
-<div class="venue-name">${ev.venue}</div>
-
-<div class="time-info">開場:${ev.openTime} / 開演:${ev.startTime}</div>
-
-<div class="meta-row">
-
-<select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
-
-<option ${ev.group==='ハロー！プロジェクト'?'selected':''}>ハロー！プロジェクト</option>
-
-<option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
-
-<option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
-
-<option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
-
-<option ${ev.group==='Juice=Juice'?'selected':''}>Juice=Juice</option>
-
-<option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
-
-<option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
-
-<option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
-
-</select>
-
-${memoBtnHtml}
-
-${subText ? `<div class="schedule-info">🗓️ ${subText}</div>` : ''}
-
-</div>
-
-</div>
-
-<button class="status-badge ${statusClass}" onclick="toggleStatus(${ev.id})">${statusLabel}</button>
-
-<button class="btn-delete" onclick="deleteEvent(${ev.id})">✕</button>
-
-`;
-
-return card;
-
-}
-
-
-
-function updateGroup(id, newGroup) {
-
-const ev = events.find(e => e.id === id);
-
-if (ev) {
-
-ev.group = newGroup;
-
-saveData();
-
-}
-
-}
-
-
-
-render();
-
-</script>
-
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('all', this)">📅 日程順</div>
+    <div class="tab" onclick="switchTab('group', this)">🎤 グループ別</div>
+    <div class="tab" onclick="switchTab('attending', this)">🎟 参戦予定</div>
+  </div>
+
+  <div class="input-card">
+    <div class="input-title">💭 セトリやメモの追加・スケジュール一括入力</div>
+    <div class="input-row">
+      <textarea id="inputText" placeholder="例: 公式の告知文をそのまま貼り付けOK" oninput="autoResize(this)"></textarea>
+      <button class="btn-send" onclick="handleInput()">送信</button>
+    </div>
+
+    <div id="msgArea" class="msg-area"></div>
+
+    <div class="action-btns">
+      <button class="btn-sub" onclick="fetchFromGAS()">☁️ シートから同期</button>
+      <button class="btn-sub" onclick="toggleManualForm()">＋ 手動追加</button>
+      <button class="btn-sub" onclick="exportData()">📱 バックアップ出力</button>
+      <button class="btn-sub" onclick="resetData()">初期化</button>
+    </div>
+
+    <div class="filter-section">
+      <button class="btn-filter" onclick="setFilter('all', this)">🌐 全部の公演</button>
+      <button class="btn-filter active" onclick="setFilter('upcoming', this)">✨ 今後の公演</button>
+      <button class="btn-filter" onclick="setFilter('archive', this)">📦 終了・落選</button>
+    </div>
+
+    <div id="manualForm" class="manual-form">
+      <div class="form-grid">
+        <input type="text" id="mTour" class="form-control form-full" placeholder="公演名・ツアー名（任意）">
+        <select id="mGroup" class="form-control">
+          <option>ハロー！プロジェクト</option>
+          <option>OCHA NORMA</option>
+          <option>モーニング娘。</option>
+          <option>アンジュルム</option>
+          <option>Juice=Juice</option>
+          <option>つばきファクトリー</option>
+          <option>BEYOOOOONDS</option>
+          <option>ロージークロニクル</option>
+        </select>
+        <input type="text" id="mDate" class="form-control" placeholder="日付 (例: 10/23)">
+        <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 日本武道館)">
+        <input type="text" id="mOpen" class="form-control" placeholder="開場 (例: 17:00)">
+        <input type="text" id="mStart" class="form-control" placeholder="開演 (例: 18:00)">
+        <input type="text" id="mPrice" class="form-control" placeholder="チケット代 (例: 9000)">
+        <input type="text" id="mApplyEnd" class="form-control" placeholder="受付締切 (例: 9/7 17:00)">
+        <input type="text" id="mAnnounce" class="form-control form-full" placeholder="当落発表 (例: 9/11 15:00)">
+      </div>
+      <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none;" onclick="addManualEvent()">追加する</button>
+    </div>
+  </div>
+
+  <div id="eventList"></div>
+
+  <div id="memoModal">
+    <div class="modal-content">
+      <div class="modal-title" id="memoModalTitle">📝 セトリ・メモの編集</div>
+      <textarea id="memoModalText" class="modal-textarea" placeholder="ここにセトリや感想を書き込めます..."></textarea>
+      <div class="modal-btns">
+        <button class="modal-btn-cancel" onclick="closeMemoModal()">キャンセル</button>
+        <button class="modal-btn-save" onclick="saveMemoModal()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK5LvyKxjFkCrz6PKujV_SV8fgfmjCPAizugpxOdZW8flyusKQJGWtpueXl6GsHCzY/exec';
+
+    let events = JSON.parse(localStorage.getItem('hp_events') || '[]');
+    let currentTab = 'all';
+    let currentFilter = 'upcoming';
+    let editingEventId = null;
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      let newHeight = el.scrollHeight;
+      if (newHeight > 250) newHeight = 250;
+      el.style.height = newHeight + 'px';
+    }
+
+    function cleanVenueAndTour(rawTitle, rawVenue) {
+      let tour = rawTitle || 'ツアー指定なし';
+      let venue = rawVenue || '会場未定';
+
+      if (venue.includes(' - ')) {
+        const parts = venue.split(' - ');
+        venue = parts[parts.length - 1];
+      }
+
+      if (!/^(東京都|北海道|(京都|大阪)府|.{2,3}県)/.test(venue)) {
+        if (venue.includes('日本武道館')) venue = '東京都 ' + venue;
+        else if (venue.includes('ぴあアリーナ')) venue = '神奈川県 ' + venue;
+        else if (venue.includes('PORTBASE')) venue = '愛知県 ' + venue;
+        else if (venue.includes('リリア')) venue = '埼玉県 ' + venue;
+        else if (venue.includes('立川ステージガーデン')) venue = '東京都 ' + venue;
+        else if (venue.includes('ハーモニーホール座間')) venue = '神奈川県 ' + venue;
+        else if (venue.includes('NHKホール')) venue = '東京都 ' + venue;
+        else if (venue.includes('横浜アリーナ')) venue = '神奈川県 ' + venue;
+        else if (venue.includes('COOL JAPAN PARK')) venue = '大阪府 ' + venue;
+        else if (venue.includes('オリックス劇場')) venue = '大阪府 ' + venue;
+      }
+
+      return { tour, venue };
+    }
+
+    function formatTime(val) {
+      if (!val) return '';
+      const str = String(val);
+
+      if (str.includes('T') || str.includes('1899-')) {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          let h = d.getUTCHours() + 9;
+          const m = d.getUTCMinutes();
+          if (h >= 24) h -= 24;
+          return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+      }
+
+      const match = str.match(/(\d{1,2}):(\d{2})/);
+      if (match) {
+        return `${String(match[1]).padStart(2,'0')}:${match[2]}`;
+      }
+      return str;
+    }
+
+    function formatSchedule(val) {
+      if (!val) return '';
+      const str = String(val);
+
+      if (str.includes('T') || str.includes('1899-')) {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          let h = d.getUTCHours() + 9;
+          const m = d.getUTCMinutes();
+          if (h >= 24) h -= 24;
+          if (h === 0 && m === 0 && str.includes('00:00:00')) {
+            return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+          }
+          return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+      }
+      return str;
+    }
+
+    function saveData() {
+      localStorage.setItem('hp_events', JSON.stringify(events));
+      render();
+    }
+
+    function showMsg(text) {
+      document.getElementById('msgArea').innerText = text;
+    }
+
+    function parseStatus(rawStatus) {
+      if (!rawStatus) return '未応募';
+      const validStatuses = ['未応募', '応募済み', '当落待ち', '当選', '落選', '抽選終了'];
+      if (validStatuses.includes(rawStatus)) {
+        return rawStatus;
+      }
+      return '未応募';
+    }
+
+    function fetchFromGAS() {
+      showMsg('☁️ スプレッドシートから最新データを取得中...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      fetch(GAS_URL, { signal: controller.signal })
+        .then(res => res.json())
+        .then(data => {
+          clearTimeout(timeoutId);
+          if (!data || data.length === 0) {
+            showMsg('⚠️ シートにデータがありませんでした。');
+            render();
+            return;
+          }
+
+          data.forEach(item => {
+            if (!item.month || !item.day) return;
+
+            let mStr = String(item.month).includes('月') ? item.month : item.month + '月';
+            let dStr = String(item.day).replace('日', '');
+
+            const cleaned = cleanVenueAndTour(item.title, item.venue);
+
+            let existing = events.find(e => e.month === mStr && e.day === dStr && (e.venue.includes(cleaned.venue) || cleaned.venue.includes(e.venue)));
+
+            if (existing) {
+              existing.tour = existing.tour && existing.tour !== 'ツアー指定なし' ? existing.tour : cleaned.tour;
+              existing.openTime = formatTime(item.openTime) || existing.openTime;
+              existing.startTime = formatTime(item.startTime) || existing.startTime;
+              existing.price = item.price !== undefined && item.price !== null && String(item.price).trim() !== '' ? String(item.price).trim() : existing.price;
+              if (item.applyEnd) existing.applyEnd = formatSchedule(item.applyEnd);
+              if (item.announce) existing.announce = formatSchedule(item.announce);
+              if (item.group && item.group !== 'ハロー！プロジェクト') {
+                existing.group = item.group;
+              }
+            } else {
+              events.push({
+                id: Date.now() + Math.random(),
+                tour: cleaned.tour,
+                group: item.group || 'ハロー！プロジェクト',
+                month: mStr,
+                day: dStr,
+                openTime: formatTime(item.openTime) || '--:--',
+                startTime: formatTime(item.startTime) || '--:--',
+                venue: cleaned.venue,
+                status: parseStatus(item.status),
+                applyEnd: formatSchedule(item.applyEnd) || '',
+                announce: formatSchedule(item.announce) || '',
+                price: item.price !== undefined && item.price !== null ? String(item.price).trim() : '',
+                memo: ''
+              });
+            }
+          });
+
+          saveData();
+          showMsg('✨ スプレッドシートから同期しました！');
+        })
+        .catch(err => {
+          clearTimeout(timeoutId);
+          console.warn('GAS Fetch Warning:', err);
+          showMsg('⚠️ 通信エラー。保存済みのローカルデータを表示します。');
+          render();
+        });
+    }
+
+    function toggleManualForm() {
+      const form = document.getElementById('manualForm');
+      form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function parseDateStr(str) {
+      if (!str) return { month: '10月', day: '23' };
+      const mMatch = str.match(/(\d{1,2})[月\/](\d{1,2})/);
+      if (mMatch) {
+        return { month: mMatch[1] + '月', day: mMatch[2] };
+      }
+      return { month: '日程', day: str };
+    }
+
+    function getDateSortValue(ev) {
+      const m = parseInt(ev.month, 10) || 0;
+      const d = parseInt(ev.day, 10) || 0;
+      return m * 100 + d;
+    }
+
+    function getFullSortValue(ev) {
+      const dateVal = getDateSortValue(ev) * 10000;
+      if (!ev.startTime || ev.startTime === '--:--') return dateVal;
+      const parts = ev.startTime.split(':');
+      const hour = parseInt(parts[0], 10) || 0;
+      const min = parseInt(parts[1], 10) || 0;
+      return dateVal + (hour * 60 + min);
+    }
+
+    function isPastEvent(ev) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const m = parseInt(ev.month, 10);
+      const d = parseInt(ev.day, 10);
+
+      if (!m || !d) return false;
+
+      const evDate = new Date(currentYear, m - 1, d, 23, 59, 59);
+      if (now.getMonth() === 11 && m === 1) {
+        evDate.setFullYear(currentYear + 1);
+      }
+
+      return evDate < now;
+    }
+
+    function setFilter(filterType, el) {
+      currentFilter = filterType;
+      document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function handleInput() {
+      const textEl = document.getElementById('inputText');
+      const text = textEl.value.trim();
+      if (!text) return;
+
+      if (text.startsWith('[') && text.endsWith(']')) {
+        try {
+          events = JSON.parse(text);
+          saveData();
+          showMsg('📋 バックアップ用データを復元しました！');
+          textEl.value = '';
+          textEl.style.height = '70px';
+          return;
+        } catch (e) {}
+      }
+
+      if (text.includes("申込期間") || text.includes("日本武道館公演") || text.includes("ぴあアリーナMM公演")) {
+        let applyEndStr = "";
+        let announceStr = "";
+
+        const applyMatch = text.match(/申込期間[:：].*?～.*?(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
+        if (applyMatch) {
+          applyEndStr = `${applyMatch[1]}/${applyMatch[2]} ${applyMatch[3]}:00`;
+        }
+
+        const announceMatch = text.match(/当選[・及]落選確認期間[:：]\s*(\d{1,2})月(\d{1,2})日.*?(\d{1,2})時/);
+        if (announceMatch) {
+          announceStr = `${announceMatch[1]}/${announceMatch[2]} ${announceMatch[3]}:00`;
+        }
+
+        let currentGroup = "Juice=Juice";
+
+        const budokanMatch = text.match(/日本武道館公演[:：].*?(\d{1,2})月(\d{1,2})日/);
+        const bMonth = budokanMatch ? budokanMatch[1] + "月" : "10月";
+        const bDay = budokanMatch ? budokanMatch[2] : "23";
+        const venueB = "東京都 日本武道館";
+        const tourB = "Juice=Juice Room Tour 2026 「5ROOMS -SUITE-」";
+
+        let existingB = events.find(e => e.venue.includes("日本武道館"));
+        if (existingB) {
+          existingB.month = bMonth;
+          existingB.day = bDay;
+          existingB.applyEnd = applyEndStr;
+          existingB.announce = announceStr;
+          existingB.tour = tourB;
+        } else {
+          events.push({
+            id: Date.now() + Math.random(),
+            tour: tourB,
+            group: currentGroup,
+            month: bMonth,
+            day: bDay,
+            openTime: "17:00",
+            startTime: "18:00",
+            venue: venueB,
+            status: '未応募',
+            applyEnd: applyEndStr,
+            announce: announceStr,
+            price: "9000",
+            memo: ''
+          });
+        }
+
+        const piaMatch = text.match(/ぴあアリーナMM公演[:：].*?(\d{1,2})月(\d{1,2})日/);
+        const pMonth = piaMatch ? piaMatch[1] + "月" : "11月";
+        const pDay = piaMatch ? piaMatch[2] : "12";
+        const venueP = "神奈川県 ぴあアリーナMM";
+        const tourP = "Juice=Juice Room Tour 2026 「5ROOMS -ROYAL SUITE-」";
+
+        let existingP = events.find(e => e.venue.includes("ぴあアリーナMM"));
+        if (existingP) {
+          existingP.month = pMonth;
+          existingP.day = pDay;
+          existingP.applyEnd = applyEndStr;
+          existingP.announce = announceStr;
+          existingP.tour = tourP;
+        } else {
+          events.push({
+            id: Date.now() + Math.random(),
+            tour: tourP,
+            group: currentGroup,
+            month: pMonth,
+            day: pDay,
+            openTime: "17:00",
+            startTime: "18:00",
+            venue: venueP,
+            status: '未応募',
+            applyEnd: applyEndStr,
+            announce: announceStr,
+            price: "9000",
+            memo: ''
+          });
+        }
+
+        saveData();
+        textEl.value = '';
+        textEl.style.height = '70px';
+        showMsg('✨ 公式告知のスケジュールを反映しました！');
+        return;
+      }
+
+      const isApplied = /(応募|申し込んだ|申込|エントリー|申し込む)/.test(text);
+      const isWon = /(当選|当たった|チケット取れた|参戦確定|ご用意された)/.test(text);
+      const isLost = /(落選|外れた|全滅|ダメだった|ご用意されなかった)/.test(text);
+      const isClosed = /(抽選終了|受付終了|見送り|締め切り)/.test(text);
+
+      const dateMatch = text.match(/(\d{1,2})月(\d{1,2})日/) || text.match(/(\d{1,2})\/(\d{1,2})/);
+
+      if (dateMatch) {
+        const targetMonth = dateMatch[1] + "月";
+        const targetDay = dateMatch[2];
+        const targetEvent = events.find(e => e.month === targetMonth && e.day === targetDay);
+
+        if (targetEvent) {
+          let updated = false;
+          if (isWon) { targetEvent.status = '当選'; updated = true; }
+          else if (isLost) { targetEvent.status = '落選'; updated = true; }
+          else if (isApplied) { targetEvent.status = '応募済み'; updated = true; }
+          else if (isClosed) { targetEvent.status = '抽選終了'; updated = true; }
+
+          if ((!isApplied && !isWon && !isLost && !isClosed) || text.includes('セトリ') || text.includes('メモ') || text.includes('￥') || text.includes('円') || text.includes('レポ')) {
+            targetEvent.memo = (targetEvent.memo ? targetEvent.memo + '\n\n' : '') + text;
+            updated = true;
+          }
+
+          if (updated) {
+            saveData();
+            textEl.value = '';
+            textEl.style.height = '70px';
+            showMsg(`🎉 ${targetMonth}${targetDay}日の情報を更新しました！`);
+            return;
+          }
+        }
+      }
+
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+      let currentTour = "指定なし・単独イベント";
+      let currentGroup = "ハロー！プロジェクト";
+      let addedCount = 0;
+
+      lines.forEach(line => {
+        if (line.includes("公演日") && line.includes("会場")) return;
+
+        if (line.includes("ハロー！プロジェクト") || line.includes("Hello! Project")) currentGroup = "ハロー！プロジェクト";
+        else if (line.includes("OCHA NORMA")) currentGroup = "OCHA NORMA";
+        else if (line.includes("モーニング娘。")) currentGroup = "モーニング娘。";
+        else if (line.includes("アンジュルム")) currentGroup = "アンジュルム";
+        else if (line.includes("Juice=Juice")) currentGroup = "Juice=Juice";
+        else if (line.includes("つばきファクトリー")) currentGroup = "つばきファクトリー";
+        else if (line.includes("BEYOOOOONDS")) currentGroup = "BEYOOOOONDS";
+        else if (line.includes("ロージークロニクル")) currentGroup = "ロージークロニクル";
+
+        if ((line.includes("公演名") || line.includes("出演") || line.includes("TOUR") || line.includes("ツアー") || line.includes("『")) && !line.match(/\d{1,2}月\d{1,2}日/)) {
+          currentTour = line.replace(/^公演名[\s\t]*/, '').trim();
+          return;
+        }
+
+        const dMatch = line.match(/(\d{1,2})月(\d{1,2})日/) || line.match(/(\d{1,2})\/(\d{1,2})/);
+        const timeMatches = line.match(/(\d{1,2}:\d{2})/g);
+
+        if (dMatch) {
+          let openTime = '';
+          let startTime = '';
+
+          if (timeMatches) {
+            if (timeMatches.length >= 2) {
+              openTime = timeMatches[0];
+              startTime = timeMatches[1];
+            } else if (timeMatches.length === 1) {
+              startTime = timeMatches[0];
+            }
+          }
+
+          let cleanLine = line.replace(/(\d{1,2}月\d{1,2}日|\d{1,2}\/\d{1,2}|\([日月火水木金土]\))/g, '')
+                              .replace(/\d{1,2}:\d{2}/g, '')
+                              .trim();
+
+          const cleaned = cleanVenueAndTour(currentTour, cleanLine);
+
+          events.push({
+            id: Date.now() + Math.random(),
+            tour: cleaned.tour,
+            group: currentGroup,
+            month: dMatch[1] + "月",
+            day: dMatch[2],
+            openTime: openTime,
+            startTime: startTime,
+            venue: cleaned.venue,
+            status: '未応募',
+            applyEnd: '',
+            announce: '',
+            price: '',
+            memo: ''
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount > 0) {
+        saveData();
+        textEl.value = '';
+        textEl.style.height = '70px';
+        showMsg('🎉 スケジュールを追加しました！');
+      } else {
+        showMsg('⚠️ 日付が見つかりませんでした。');
+      }
+    }
+
+    function addManualEvent() {
+      const tour = document.getElementById('mTour').value.trim() || '単独イベント・その他';
+      const group = document.getElementById('mGroup').value;
+      const dateStr = document.getElementById('mDate').value.trim();
+      const rawVenue = document.getElementById('mVenue').value.trim();
+      
+      const open = document.getElementById('mOpen').value.trim() || '';
+      const start = document.getElementById('mStart').value.trim() || '';
+      const price = document.getElementById('mPrice').value.trim();
+      const applyEnd = document.getElementById('mApplyEnd').value.trim() || '';
+      const announce = document.getElementById('mAnnounce').value.trim() || '';
+
+      const dObj = parseDateStr(dateStr);
+      const cleaned = cleanVenueAndTour(tour, rawVenue);
+
+      events.push({
+        id: Date.now() + Math.random(),
+        tour: cleaned.tour,
+        group: group,
+        month: dObj.month,
+        day: dObj.day,
+        openTime: open,
+        startTime: start,
+        venue: cleaned.venue,
+        status: '未応募',
+        price: price,
+        applyEnd: applyEnd,
+        announce: announce,
+        memo: ''
+      });
+
+      saveData();
+      toggleManualForm();
+      
+      document.getElementById('mTour').value = '';
+      document.getElementById('mDate').value = '';
+      document.getElementById('mVenue').value = '';
+      document.getElementById('mOpen').value = '';
+      document.getElementById('mStart').value = '';
+      document.getElementById('mPrice').value = '';
+      document.getElementById('mApplyEnd').value = '';
+      document.getElementById('mAnnounce').value = '';
+
+      showMsg('➕ 手動で公演を追加しました！');
+    }
+
+    function exportData() {
+      const dataStr = JSON.stringify(events);
+      navigator.clipboard.writeText(dataStr).then(() => {
+        showMsg('📋 バックアップ用データをコピーしました！');
+      });
+    }
+
+    function resetData() {
+      if (confirm('すべてのデータを消去して初期化しますか？')) {
+        events = [];
+        saveData();
+        showMsg('データを初期化しました。');
+      }
+    }
+
+    function toggleStatus(id) {
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+      if (ev.status === '未応募') ev.status = '応募済み';
+      else if (ev.status === '応募済み' || ev.status === '当落待ち') ev.status = '当選';
+      else if (ev.status === '当選') ev.status = '落選';
+      else if (ev.status === '落選') ev.status = '抽選終了';
+      else ev.status = '未応募';
+      saveData();
+    }
+
+    function openMemoModal(id) {
+      editingEventId = id;
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+
+      document.getElementById('memoModalTitle').innerText = `📝 ${ev.month}${ev.day} ${ev.venue}`;
+      document.getElementById('memoModalText').value = ev.memo || '';
+      document.getElementById('memoModal').style.display = 'flex';
+    }
+
+    function closeMemoModal() {
+      document.getElementById('memoModal').style.display = 'none';
+      editingEventId = null;
+    }
+
+    function saveMemoModal() {
+      if (editingEventId === null) return;
+      const ev = events.find(e => e.id === editingEventId);
+      if (ev) {
+        ev.memo = document.getElementById('memoModalText').value.trim();
+        saveData();
+        showMsg('📝 セトリ・メモを保存しました！');
+      }
+      closeMemoModal();
+    }
+
+    function deleteEvent(id) {
+      events = events.filter(e => e.id !== id);
+      saveData();
+    }
+
+    function switchTab(tab, el) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function getFilteredEvents() {
+      let result = [...events];
+
+      if (currentFilter === 'upcoming') {
+        result = result.filter(e => !isPastEvent(e) && e.status !== '落選' && e.status !== '抽選終了');
+      } else if (currentFilter === 'archive') {
+        result = result.filter(e => isPastEvent(e) || e.status === '落選' || e.status === '抽選終了');
+      }
+
+      return result.sort((a, b) => getFullSortValue(a) - getFullSortValue(b));
+    }
+
+    function renderGroupedList(listEl, displayEvents) {
+      const groupMinDate = {};
+      displayEvents.forEach(e => {
+        const val = getDateSortValue(e);
+        if (groupMinDate[e.group] === undefined || val < groupMinDate[e.group]) {
+          groupMinDate[e.group] = val;
+        }
+      });
+
+      const groups = [...new Set(displayEvents.map(e => e.group))];
+      groups.sort((a, b) => (groupMinDate[a] || 0) - (groupMinDate[b] || 0));
+
+      groups.forEach(g => {
+        const header = document.createElement('div');
+        header.className = 'group-header';
+        header.innerText = `🎤 ${g}`;
+        listEl.appendChild(header);
+
+        const groupEvs = displayEvents.filter(e => e.group === g);
+        const tours = [...new Set(groupEvs.map(e => e.tour || 'ツアー指定なし'))];
+
+        tours.forEach(t => {
+          if (t && t !== '指定なし・単独イベント') {
+            const subHeader = document.createElement('div');
+            subHeader.className = 'tour-sub-header';
+            subHeader.innerText = `📢 ${t}`;
+            listEl.appendChild(subHeader);
+          }
+
+          const sortedInTour = groupEvs.filter(e => (e.tour || 'ツアー指定なし') === t)
+                                        .sort((a, b) => getFullSortValue(a) - getFullSortValue(b));
+
+          sortedInTour.forEach(ev => {
+            listEl.appendChild(createCard(ev, false));
+          });
+        });
+      });
+    }
+
+    function renderMonthlyList(listEl, displayEvents) {
+      const months = [...new Set(displayEvents.map(e => e.month))];
+      months.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
+
+      months.forEach(m => {
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.innerText = `🗓️ ${m}`;
+        listEl.appendChild(header);
+
+        const monthEvs = displayEvents.filter(e => e.month === m)
+                                      .sort((a, b) => getFullSortValue(a) - getFullSortValue(b));
+
+        monthEvs.forEach(ev => {
+          listEl.appendChild(createCard(ev, true));
+        });
+      });
+    }
+
+    function render() {
+      const listEl = document.getElementById('eventList');
+      listEl.innerHTML = '';
+
+      const filteredEvents = getFilteredEvents();
+
+      if (currentTab === 'attending') {
+        const displayEvents = filteredEvents.filter(e => e.status === '当選' || isPastEvent(e));
+        renderMonthlyList(listEl, displayEvents);
+      } else if (currentTab === 'group') {
+        renderGroupedList(listEl, filteredEvents);
+      } else {
+        filteredEvents.forEach(ev => {
+          listEl.appendChild(createCard(ev, true));
+        });
+      }
+    }
+
+    function createCard(ev, showTourTitle = false) {
+      const card = document.createElement('div');
+      const past = isPastEvent(ev);
+      card.className = `card ${past ? 'past-event' : ''}`;
+
+      let mStr = ev.month;
+      let dStr = ev.day;
+
+      let statusClass = '';
+      let statusLabel = parseStatus(ev.status);
+
+      if (statusLabel === '応募済み' || statusLabel === '当落待ち') {
+        statusClass = 'applied';
+      } else if (statusLabel === '当選') {
+        statusClass = 'won';
+      } else if (statusLabel === '抽選終了') {
+        statusClass = 'closed';
+      } else if (statusLabel === '落選') {
+        statusClass = 'lost';
+      } else if (past) {
+        statusClass = 'ended';
+        statusLabel = '終了';
+      }
+
+      let subText = '';
+      
+      if (statusLabel !== '当選') {
+        if (ev.applyEnd) subText += `締切: ${ev.applyEnd}`;
+        if (ev.announce) {
+          if (subText) subText += ' / ';
+          subText += `当落: ${ev.announce}`;
+        }
+        if (ev.price !== undefined && ev.price !== null && String(ev.price).trim() !== '') {
+          const pStr = String(ev.price).trim();
+          const priceVal = isNaN(pStr.replace(/[￥,]/g, '')) ? pStr : Number(pStr.replace(/[￥,]/g, '')).toLocaleString();
+          if (subText) subText += ' / ';
+          subText += `チケ代: ¥${priceVal}`;
+        }
+      }
+
+      let memoBtnHtml = '';
+      if (past && ev.status === '当選') {
+        const hasMemo = ev.memo && ev.memo.trim() !== '';
+        memoBtnHtml = `<button class="btn-memo-edit ${hasMemo ? 'has-memo' : ''}" onclick="openMemoModal(${ev.id})">📝 ${hasMemo ? 'セトリ/メモあり' : 'セトリ/メモ追加'}</button>`;
+      }
+
+      let timeDisplay = '';
+      if (ev.openTime && ev.openTime !== '--:--' && ev.startTime && ev.startTime !== '--:--') {
+        timeDisplay = `開場:${ev.openTime} / 開演:${ev.startTime}`;
+      } else if (ev.startTime && ev.startTime !== '--:--') {
+        timeDisplay = `開演:${ev.startTime}`;
+      } else if (ev.openTime && ev.openTime !== '--:--') {
+        timeDisplay = `開場:${ev.openTime}`;
+      }
+
+      card.innerHTML = `
+        <div class="date-box">
+          <div class="date-month">${mStr}</div>
+          <div class="date-day">${dStr}</div>
+        </div>
+        <div class="card-info">
+          ${showTourTitle && ev.tour ? `<div class="tour-title">📢 ${ev.tour}</div>` : ''}
+          <div class="venue-name">${ev.venue}</div>
+          ${timeDisplay ? `<div class="time-info">${timeDisplay}</div>` : ''}
+          <div class="meta-row">
+            <select class="group-select" onchange="updateGroup(${ev.id}, this.value)">
+              <option ${ev.group==='ハロー！プロジェクト'?'selected':''}>ハロー！プロジェクト</option>
+              <option ${ev.group==='OCHA NORMA'?'selected':''}>OCHA NORMA</option>
+              <option ${ev.group==='モーニング娘。'?'selected':''}>モーニング娘。</option>
+              <option ${ev.group==='アンジュルム'?'selected':''}>アンジュルム</option>
+              <option ${ev.group==='Juice=Juice'?'selected':''}>Juice=Juice</option>
+              <option ${ev.group==='つばきファクトリー'?'selected':''}>つばきファクトリー</option>
+              <option ${ev.group==='BEYOOOOONDS'?'selected':''}>BEYOOOOONDS</option>
+              <option ${ev.group==='ロージークロニクル'?'selected':''}>ロージークロニクル</option>
+            </select>
+            ${memoBtnHtml}
+            ${subText ? `<div class="schedule-info">🗓️ ${subText}</div>` : ''}
+          </div>
+        </div>
+        <button class="status-badge ${statusClass}" onclick="toggleStatus(${ev.id})">${statusLabel}</button>
+        <button class="btn-delete" onclick="deleteEvent(${ev.id})">✕</button>
+      `;
+      return card;
+    }
+
+    function updateGroup(id, newGroup) {
+      const ev = events.find(e => e.id === id);
+      if (ev) {
+        ev.group = newGroup;
+        saveData();
+      }
+    }
+
+    render();
+  </script>
 </body>
-
 </html>
