@@ -158,19 +158,19 @@
       background: #fff;
     }
 
-    .group-header {
-      background: linear-gradient(90deg, #ff70a6, #ff9770);
+    .month-header {
+      background: #ff70a6;
       color: white;
-      padding: 8px 16px;
-      border-radius: 10px;
+      padding: 6px 12px;
+      border-radius: 8px;
       font-weight: bold;
-      font-size: 1rem;
+      font-size: 0.9rem;
       margin-top: 20px;
       margin-bottom: 10px;
     }
 
-    .month-header {
-      background: linear-gradient(90deg, #d81b60, #ff4081);
+    .group-header {
+      background: linear-gradient(90deg, #ff70a6, #ff9770);
       color: white;
       padding: 8px 16px;
       border-radius: 10px;
@@ -429,9 +429,9 @@
         <input type="text" id="mVenue" class="form-control form-full" placeholder="会場名 (例: 東京都 日本武道館)">
         <input type="text" id="mOpen" class="form-control" placeholder="開場 (例: 17:00)">
         <input type="text" id="mStart" class="form-control" placeholder="開演 (例: 18:00)">
-        <input type="text" id="mPrice" class="form-control" placeholder="チケット代 (例: 9000)">
-        <input type="text" id="mApplyEnd" class="form-control" placeholder="受付締切 (例: 9/7 17:00)">
-        <input type="text" id="mAnnounce" class="form-control form-full" placeholder="当落発表 (例: 9/11 15:00)">
+        <input type="text" id="mPrice" class="form-control" placeholder="チケット代 (例: 9000・任意)">
+        <input type="text" id="mApplyEnd" class="form-control" placeholder="受付締切 (例: 9/7 17:00・任意)">
+        <input type="text" id="mAnnounce" class="form-control form-full" placeholder="当落発表 (例: 9/11 15:00・任意)">
       </div>
       <button class="btn-sub" style="width:100%; background:#ff4d6d; color:white; border:none; padding:10px;" onclick="addManualEvent()">追加する</button>
     </div>
@@ -1031,22 +1031,17 @@
       });
     }
 
-    function renderMonthlyList(listEl, displayEvents) {
-      const months = [...new Set(displayEvents.map(e => e.month))];
-      months.sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0));
-
-      months.forEach(m => {
-        const header = document.createElement('div');
-        header.className = 'month-header';
-        header.innerText = `🗓️ ${m}`;
-        listEl.appendChild(header);
-
-        const monthEvs = displayEvents.filter(e => e.month === m)
-                                      .sort((a, b) => getDateSortValue(a) - getDateSortValue(b));
-
-        monthEvs.forEach(ev => {
-          listEl.appendChild(createCard(ev, true));
-        });
+    function renderSimpleList(listEl, displayEvents) {
+      let lastMonth = '';
+      displayEvents.forEach(ev => {
+        if (ev.month !== lastMonth) {
+          lastMonth = ev.month;
+          const monthHeader = document.createElement('div');
+          monthHeader.className = 'month-header';
+          monthHeader.innerText = lastMonth;
+          listEl.appendChild(monthHeader);
+        }
+        listEl.appendChild(createCard(ev, true));
       });
     }
 
@@ -1058,11 +1053,11 @@
 
       if (currentTab === 'attending') {
         const displayEvents = filteredEvents.filter(e => e.status === '当選' || isPastEvent(e));
-        renderMonthlyList(listEl, displayEvents);
+        renderSimpleList(listEl, displayEvents);
       } else if (currentTab === 'group') {
         renderGroupedList(listEl, filteredEvents);
       } else {
-        renderMonthlyList(listEl, filteredEvents);
+        renderSimpleList(listEl, filteredEvents);
       }
     }
 
@@ -1090,21 +1085,15 @@
         statusLabel = '終了';
       }
 
-      let subText = '';
-      
-      if (statusLabel !== '当選') {
-        if (ev.applyEnd) subText += `締切: ${ev.applyEnd}`;
-        if (ev.announce) {
-          if (subText) subText += ' / ';
-          subText += `当落: ${ev.announce}`;
-        }
-        if (ev.price !== undefined && ev.price !== null && String(ev.price).trim() !== '') {
-          const pStr = String(ev.price).trim();
-          const priceVal = isNaN(pStr.replace(/[￥,]/g, '')) ? pStr : Number(pStr.replace(/[￥,]/g, '')).toLocaleString();
-          if (subText) subText += ' / ';
-          subText += `チケ代: ¥${priceVal}`;
-        }
+      let subItems = [];
+      if (ev.applyEnd) subItems.push(`締切: ${ev.applyEnd}`);
+      if (ev.announce) subItems.push(`当落: ${ev.announce}`);
+      if (ev.price !== undefined && ev.price !== null && String(ev.price).trim() !== '') {
+        const pStr = String(ev.price).trim();
+        const priceVal = isNaN(pStr.replace(/[￥,]/g, '')) ? pStr : Number(pStr.replace(/[￥,]/g, '')).toLocaleString();
+        subItems.push(`チケ代: ¥${priceVal}`);
       }
+      let subText = subItems.join(' / ');
 
       let memoBtnHtml = '';
       if (past && ev.status === '当選') {
